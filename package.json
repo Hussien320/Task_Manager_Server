@@ -1,0 +1,27 @@
+{
+  "name": "task_manager_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf build",
+    "prebuild": "npm run clean",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hussien320/Task_Manager_Server.git"
+  },
+  "keywords": [],
+  "author": "hussien",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hussien320/Task_Manager_Server/issues"
+  },
+  "homepage": "https://github.com/Hussien320/Task_Manager_Server#readme",
+  "devDependencies": {
+    "rimraf": "^6.1.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
+  }
+}

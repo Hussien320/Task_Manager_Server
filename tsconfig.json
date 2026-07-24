@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "strict": true,
+        "types": ["node"],
+        "rootDir": "./src",
+        "outDir": "build"
+
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules"]
+
+}
