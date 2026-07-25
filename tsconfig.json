@@ -5,7 +5,9 @@
         "strict": true,
         "types": ["node"],
         "rootDir": "./src",
-        "outDir": "build"
+        "outDir": "build",
+        "esModuleInterop": true,
+        "sourceMap": true
 
     },
     "include": ["src/**/*.ts"],
