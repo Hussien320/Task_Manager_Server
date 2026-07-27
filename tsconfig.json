@@ -3,7 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "strict": true,
-        "types": ["node","jest"],
+        "types": ["node"],
         "rootDir": "./src",
         "outDir": "build",
         "esModuleInterop": true,
