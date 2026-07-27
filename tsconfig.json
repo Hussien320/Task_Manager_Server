@@ -3,7 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "strict": true,
-        "types": ["node"],
+        "types": ["node","vitest/globals"],
         "rootDir": "./src",
         "outDir": "build",
         "esModuleInterop": true,
