@@ -3,15 +3,15 @@ import config from "./config";
 import express, { Request, Response, NextFunction } from "express";
 import logger from "./util/logger";
 
-import bodyParser from "body-parser";
+
 import cors from "cors";
 import requestLogger from "./middleware/requestlogger";
 import router from "./routes";
 import { ApiException } from "./util/exceptions/ApiException";
 const app=express();
 app.use(helmet());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(requestLogger);
 app.use("/", router);
