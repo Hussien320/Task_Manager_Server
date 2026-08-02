@@ -11,3 +11,90 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+}
+
+enum ProductType {
+ PLASTIC
+  VEGETABLES
+  CLEANING
+}
+
+
+
+enum TransactionType {
+ADDITION
+  REMOVAL
+
+}
+
+model User {
+  id                         String    @id @default(uuid()) 
+  username                   String   
+  email                      String    @unique 
+  pass_hash                  String   
+  role                       Role      @default(EMPLOYEE)
+  is_verified                Boolean   @default(false)
+  last_login                 DateTime?
+  reset_password_token       String?  
+  reset_password_expires_at  DateTime?
+  refresh_token              String?   
+  refresh_token_expires_at   DateTime? 
+  created_at                 DateTime  @default(now()) 
+
+  inventory_logs             InventoryLog[]
+  app_settings               AppSetting[]
+}
+
+
+model Supplier {
+  id           String       @id @default(uuid())
+  name         String
+  product_type ProductType
+  is_active    Boolean      @default(true)
+  created_at   DateTime     @default(now())
+
+  products     Product[]
+}
+
+model Product {
+  id                   String    @id @default(uuid())
+  supplier_id          String
+  name                 String
+  Type             ProductType
+  quantity             Int
+  price                Decimal
+  expiry_date          DateTime?
+  low_stock_threshold  Int?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  supplier             Supplier  @relation(fields: [supplier_id], references: [id])
+  inventory_logs       InventoryLog[]
+}
+
+model InventoryLog {
+  id                 String          @id @default(uuid())
+  user_id            String
+  product_id         String
+  transaction_type   TransactionType
+  quantity_changed   Int
+  unit_price_at_time Decimal
+  logged_at          DateTime        @default(now())
+
+  user               User            @relation(fields: [user_id], references: [id])
+  product            Product         @relation(fields: [product_id], references: [id])
+}
+
+model AppSetting {
+  id           String    @id @default(uuid())
+  updated_by   String?
+  setting_key  String    @unique
+  setting_value String
+  updated_at   DateTime? @default(now())
+
+  updated_by_user User? @relation(fields: [updated_by], references: [id])
+}
