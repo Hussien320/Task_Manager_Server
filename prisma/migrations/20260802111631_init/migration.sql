@@ -41,7 +41,7 @@ CREATE TABLE "Product" (
     "id" TEXT NOT NULL,
     "supplier_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "Type" "ProductType" NOT NULL,
+    "type" "ProductType" NOT NULL,
     "quantity" INTEGER NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
     "expiry_date" TIMESTAMP(3),

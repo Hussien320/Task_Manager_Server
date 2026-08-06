@@ -10,6 +10,9 @@ const prisma = new PrismaClient({
   }),
 });
 
+const hashValue = (value: string | null) => (value ? bcrypt.hashSync(value, 10) : null);
+const hashPassword = (password: string) => bcrypt.hashSync(password, 10);
+
 async function main() {
   await prisma.inventoryLog.deleteMany();
   await prisma.appSetting.deleteMany();
@@ -21,11 +24,11 @@ async function main() {
     data: {
       username: "hussien",
       email: "husssienzoughaib@gmail.com",
-      pass_hash: bcrypt.hashSync("123456", 10),
+      pass_hash: hashPassword("123456"),
       role: Role.ADMIN,
       is_verified: true,
       last_login: new Date("2026-08-01T09:15:00.000Z"),
-      refresh_token: "refresh-admin-token",
+      refresh_token: hashValue("refresh-admin-token"),
       refresh_token_expires_at: new Date("2026-08-10T09:15:00.000Z"),
       reset_password_token: null,
       reset_password_expires_at: null,
@@ -36,11 +39,11 @@ async function main() {
     data: {
       username: "maria",
       email: "maria@inventory.local",
-      pass_hash: bcrypt.hashSync("123456", 10),
+      pass_hash: hashPassword("123456"),
       role: Role.EMPLOYEE,
       is_verified: true,
       last_login: new Date("2026-08-02T08:00:00.000Z"),
-      refresh_token: "refresh-manager-token",
+      refresh_token: hashValue("refresh-manager-token"),
       refresh_token_expires_at: new Date("2026-08-11T08:00:00.000Z"),
     },
   });
@@ -49,7 +52,7 @@ async function main() {
     data: {
       username: "employee",
       email: "employee@gmail.com",
-      pass_hash: bcrypt.hashSync("123456", 10),
+      pass_hash: hashPassword("123456"),
       role: Role.EMPLOYEE,
       is_verified: false,
       last_login: null,
@@ -62,13 +65,13 @@ async function main() {
     data: {
       username: "ahmed",
       email: "ahmed@inventory.local",
-      pass_hash: bcrypt.hashSync("123456", 10),
+      pass_hash: hashPassword("123456"),
       role: Role.EMPLOYEE,
       is_verified: true,
       last_login: new Date("2026-08-03T14:45:00.000Z"),
-      refresh_token: "refresh-clerk-token",
+      refresh_token: hashValue("refresh-clerk-token"),
       refresh_token_expires_at: new Date("2026-08-12T14:45:00.000Z"),
-      reset_password_token: "reset-token-for-ahmed",
+      reset_password_token: hashValue("reset-token-for-ahmed"),
       reset_password_expires_at: new Date("2026-08-04T14:45:00.000Z"),
     },
   });
@@ -101,11 +104,11 @@ async function main() {
     data: {
       supplier_id: plasticSupplier.id,
       name: "HDPE Storage Bucket",
-      Type: ProductType.PLASTIC,
+      type: ProductType.PLASTIC,
       quantity: 120,
       price: 6.75,
       expiry_date: null,
-      low_stock_threshold: 1,
+      low_stock_threshold: 10,
     },
   });
 
@@ -113,11 +116,11 @@ async function main() {
     data: {
       supplier_id: plasticSupplier.id,
       name: "Plastic Produce Crate",
-      Type: ProductType.PLASTIC,
+      type: ProductType.PLASTIC,
       quantity: 15,
       price: 8.25,
       expiry_date: null,
-      low_stock_threshold: 1,
+      low_stock_threshold: 10,
     },
   });
 
@@ -125,11 +128,11 @@ async function main() {
     data: {
       supplier_id: vegetablesSupplier.id,
       name: "Tomato Boxes",
-      Type: ProductType.VEGETABLES,
+      type: ProductType.VEGETABLES,
       quantity: 40,
       price: 2.5,
       expiry_date: new Date("2026-08-12T00:00:00.000Z"),
-      low_stock_threshold: 1,
+      low_stock_threshold: 20,
     },
   });
 
@@ -137,11 +140,11 @@ async function main() {
     data: {
       supplier_id: vegetablesSupplier.id,
       name: "Lettuce Batch",
-      Type: ProductType.VEGETABLES,
+      type: ProductType.VEGETABLES,
       quantity: 6,
       price: 1.8,
       expiry_date: new Date("2026-08-07T00:00:00.000Z"),
-      low_stock_threshold: 1,
+      low_stock_threshold: 5,
     },
   });
 
@@ -149,11 +152,11 @@ async function main() {
     data: {
       supplier_id: cleaningSupplier.id,
       name: "Glass Cleaner 500ml",
-      Type: ProductType.CLEANING,
+      type: ProductType.CLEANING,
       quantity: 30,
       price: 4.9,
       expiry_date: new Date("2027-01-10T00:00:00.000Z"),
-      low_stock_threshold: 1,
+      low_stock_threshold: 10,
     },
   });
 
@@ -215,14 +218,14 @@ async function main() {
   await prisma.appSetting.upsert({
     where: { setting_key: "inventory_low_stock_threshold" },
     update: {
-      setting_value: "1",
+      setting_value: "10",
       updated_by: admin.id,
       updated_at: new Date("2026-08-01T12:00:00.000Z"),
     },
     create: {
       updated_by: admin.id,
       setting_key: "inventory_low_stock_threshold",
-      setting_value: "1",
+      setting_value: "10",
       updated_at: new Date("2026-08-01T12:00:00.000Z"),
     },
   });
