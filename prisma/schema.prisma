@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+enum ProductType {
+  VEGTABLE
+  PLASTIC
+  CLEANING
+}
+
+enum TransactionType {
+  ADDITION
+  WITHDRAWAL
+}
+
+model User {
+  id                      String    @id @default(uuid())
+  username                String
+  email                   String    @unique
+  pass_hash               String
+  role                    UserRole  @default(EMPLOYEE)
+  is_verified             Boolean   @default(false)
+  last_login              DateTime?
+  reset_password_token    String?
+  reset_password_expiresAt DateTime?
+  refresh_token           String?
+  refresh_token_expires_at DateTime?
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  inventoryLogs InventoryLog[]
+  appSettings   AppSetting[]
+}
+
+model Supplier {
+  id            String      @id @default(uuid())
+  name          String
+  product_type  ProductType
+  is_active     Boolean     @default(true)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id                  String         @id @default(uuid())
+  supplier_id         String
+  name                String
+  category            ProductType
+  quantity            Int
+  price               Decimal
+  expiry_date         DateTime?
+  low_stock_threshold Int
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
+
+  supplier      Supplier       @relation(fields: [supplier_id], references: [id], onDelete: Restrict)
+  inventoryLogs InventoryLog[]
+
+  @@index([supplier_id])
+  @@index([category])
+  @@index([expiry_date])
+}
+
+model InventoryLog {
+  id                  String          @id @default(uuid())
+  user_id             String
+  product_id          String
+  transaction_type    TransactionType
+  quantity_changed    Int
+  unit_price_at_time  Decimal?
+  logged_at           DateTime        @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Restrict)
+
+  @@index([product_id])
+  @@index([user_id])
+  @@index([logged_at])
+}
+
+model AppSetting {
+  id            String   @id @default(uuid())
+  updated_by    String
+  setting_key   String   @unique
+  setting_value String
+  updatedAt     DateTime @updatedAt
+
+  updatedByUser User @relation(fields: [updated_by], references: [id])
+}

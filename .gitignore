@@ -40,11 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+/app/generated/prisma
+
 # AI/agent generated skills
 .claude/skills/
 .windsurf/skills/
 .agents/skills/
 skills-lock.json
-
-
-/app/generated/prisma
