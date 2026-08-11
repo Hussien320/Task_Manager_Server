@@ -1,41 +1,86 @@
 import prisma from "@/lib/db";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bycrypt from "bcrypt";
 import logger from "@/utils/logger";
+
 export async function POST(request: NextRequest) {
-   const {email,password}=await request.json();
-   //check if the user exists
-   const target_user=await prisma.user.findUnique({
-      where:{
-         email:email
-      }
-   });
-   if(!target_user){
-    logger.warn("Login attempt failed: User not found");
-    return new Response(JSON.stringify({message:"User not found"}),{status:404});
-   }
-   //compare the password
-   if(!bycrypt.compareSync(password,target_user.pass_hash||password)){
-    logger.warn("Login attempt failed: Invalid credentials");
-    return new Response(JSON.stringify({message:"Invalid credentials"}),{status:401});
-   }
-   //set userdata verfy to true
- const updateUser = await prisma.user.update({
-  where: { email: target_user.email },
-  data: { is_verified: true },
-   select: {
+  try {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "Bad request: request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+
+    const { email, password } = body || {};
+
+    if (typeof email !== "string" || !email.trim()) {
+      return NextResponse.json(
+        { message: "Bad request: email is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { message: "Bad request: email format is invalid" },
+        { status: 400 }
+      );
+    }
+
+    if (typeof password !== "string" || !password.trim()) {
+      return NextResponse.json(
+        { message: "Bad request: password is required" },
+        { status: 400 }
+      );
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: {
+        email: email.trim().toLowerCase(),
+      },
+    });
+
+    if (!targetUser) {
+      logger.warn("Login attempt failed: User not found");
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    if (!bycrypt.compareSync(password, targetUser.pass_hash || "")) {
+      logger.warn("Login attempt failed: Invalid credentials");
+      return NextResponse.json(
+        { message: "Bad request: invalid email or password" },
+        { status: 400 }
+      );
+    }
+
+    const updateUser = await prisma.user.update({
+      where: { email: targetUser.email },
+      data: { is_verified: true },
+      select: {
         id: true,
         username: true,
         email: true,
         role: true,
         is_verified: true,
         created_at: true,
-      }
-});
-logger.info(`User ${updateUser.email} logged in successfully`);
-return new Response(JSON.stringify({message:"Login successful",data:{user:updateUser}}),{status:200});
-    
+      },
+    });
 
+    logger.info(`User ${updateUser.email} logged in successfully`);
 
-
+    return NextResponse.json(
+      { message: "Login successful", data: { user: updateUser } },
+      { status: 200 }
+    );
+  } catch (error) {
+    logger.error("Login route failed", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
