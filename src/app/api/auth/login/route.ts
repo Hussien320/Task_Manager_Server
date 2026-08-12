@@ -2,9 +2,11 @@ import prisma from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import bycrypt from "bcrypt";
 import logger from "@/utils/logger";
+import { loginSchema } from "@/schemaValidations/schema";
 
 export async function POST(request: NextRequest) {
   try {
+
     let body;
     try {
       body = await request.json();
@@ -14,33 +16,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const { email, password } = body || {};
-
-    if (typeof email !== "string" || !email.trim()) {
+    //validate the data from body using zod schema
+    const parse = loginSchema.safeParse(body);
+   
+  
+    if (!parse.success) {
       return NextResponse.json(
-        { message: "Bad request: email is required" },
+        {error: parse.error.issues.map(i=>({path:i.path,message:i.message}))},
         { status: 400 }
       );
     }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { message: "Bad request: email format is invalid" },
-        { status: 400 }
-      );
-    }
-
-    if (typeof password !== "string" || !password.trim()) {
-      return NextResponse.json(
-        { message: "Bad request: password is required" },
-        { status: 400 }
-      );
-    }
+    // Extract the validated data
+    const {data} = parse;
 
     const targetUser = await prisma.user.findUnique({
       where: {
-        email: email.trim().toLowerCase(),
+        email: data.email.trim().toLowerCase(),
       },
     });
 
@@ -49,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    if (!bycrypt.compareSync(password, targetUser.pass_hash || "")) {
+    if (!bycrypt.compareSync(data.password, targetUser.pass_hash || "")) {
       logger.warn("Login attempt failed: Invalid credentials");
       return NextResponse.json(
         { message: "Bad request: invalid email or password" },
