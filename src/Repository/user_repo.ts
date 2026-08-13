@@ -1,6 +1,7 @@
 import { id, IRepo } from "@/Repository/IRepo";
  import { User, UserRole } from "@/app/generated/prisma/browser";
 import { prisma } from "@/lib/db";
+import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 export class User_Repo implements IRepo<User> {
    async  create(item: { id: string; username: string; email: string; pass_hash: string; role: UserRole; is_verified: boolean; last_login: Date | null; reset_password_token: string | null; reset_password_expiresAt: Date | null; refresh_token: string | null; refresh_token_expires_at: Date | null; created_at: Date; updated_at: Date; }): Promise<id> {
         throw new Error("Method not implemented.");
@@ -28,13 +29,16 @@ export class User_Repo implements IRepo<User> {
             });
 
             if (!targetUser) {
-                throw new Error("User not found");
+                throw new ItemNotFoundException(`User with email ${email} not found`);
             }
 
             return targetUser;
         }
         catch(err){
-            throw err
+            if (err instanceof ItemNotFoundException) {
+                throw err; // Re-throw the ItemNotFoundException
+            }
+            throw new DBException("Error retrieving user by email", err as Error);
         }
 
     }
@@ -51,7 +55,8 @@ export class User_Repo implements IRepo<User> {
             });
         }
         catch(err){
-            throw err
+           
+            throw new DBException("Error updating logged-in user", err as Error);
         }
     }
 

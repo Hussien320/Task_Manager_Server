@@ -5,6 +5,9 @@ import logger from "@/utils/logger";
 import { loginSchema } from "@/schemaValidations/schema";
 import { User_Repo } from "@/Repository/user_repo";
 import { LoginResponse } from "@/types/User";
+import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
+
+import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,24 +15,18 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { message: "Bad request: request body must be valid JSON" },
-        { status: 400 }
-      );
+      throw new BadRequestException("Bad request: request body must be valid JSON");
     }
 
     const parse = loginSchema.safeParse(body);
 
     if (!parse.success) {
-      return NextResponse.json(
-        {
-          error: parse.error.issues.map((i) => ({
-            path: i.path,
-            message: i.message,
-          })),
-        },
-        { status: 400 }
-      );
+      throw new BadRequestException("Invalid login payload", {
+        errors: parse.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
+      });
     }
 
     const { data } = parse;
@@ -37,16 +34,12 @@ export async function POST(request: NextRequest) {
     const targetUser = await repo.GetByEmail(data.email);
 
     if (!targetUser) {
-      logger.warn("Login attempt failed: User not found");
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+      throw new ItemNotFoundException("User not found");
     }
 
     if (!bycrypt.compareSync(data.password, targetUser.pass_hash || "")) {
       logger.warn("Login attempt failed: Invalid credentials");
-      return NextResponse.json(
-        { message: "Bad request: invalid email or password" },
-        { status: 400 }
-      );
+      throw new BadRequestException("Bad request: invalid email or password");
     }
 
     await repo.Update_Loged_User(targetUser.email);
@@ -67,6 +60,28 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    if (error instanceof ItemNotFoundException) {
+      logger.warn(error.name + ": " + error.message);
+      return NextResponse.json({ message: error.name + ": " + error.message }, { status: 404 });
+    }
+    if (error instanceof BadRequestException) {
+      logger.warn(error.name + ": " + error.message);
+      return NextResponse.json(
+        { message: error.name + ": " + error.message},
+        { status: 400 }
+      );
+    
+    }
+
+    if (error instanceof DBException) {
+      logger.error(`Database error during login: ${error.message}`, error);
+      return NextResponse.json(
+        { message: "Database error while processing login" },
+        { status: 500 }
+      );
+    }
+
+
     logger.error("Login route failed", error);
     return NextResponse.json(
       { message: "Internal server error" },
