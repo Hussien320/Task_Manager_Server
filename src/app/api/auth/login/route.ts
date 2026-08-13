@@ -3,11 +3,12 @@ import bycrypt from "bcrypt";
 
 import logger from "@/utils/logger";
 import { loginSchema } from "@/schemaValidations/schema";
-import { User_Repo } from "@/Repository/user_repo";
+import { User_Repo } from "@/repository/user_repo";
 import { LoginResponse } from "@/types/User";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
+import { User_Service } from "@/services/user_service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,19 +31,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { data } = parse;
-    const repo = new User_Repo();
-    const targetUser = await repo.GetByEmail(data.email);
-
-    if (!targetUser) {
-      throw new ItemNotFoundException("User not found");
-    }
-
-    if (!bycrypt.compareSync(data.password, targetUser.pass_hash || "")) {
-      logger.warn("Login attempt failed: Invalid credentials");
-      throw new BadRequestException("Bad request: invalid email or password");
-    }
-
-    await repo.Update_Loged_User(targetUser.email);
+   const targetUser=await User_Service.Login(data.email,data.password); 
+   
 
     const loginResponse: LoginResponse = {
       id: targetUser.id,
