@@ -1,12 +1,13 @@
-import prisma from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import bycrypt from "bcrypt";
+
 import logger from "@/utils/logger";
 import { loginSchema } from "@/schemaValidations/schema";
+import { User_Repo } from "@/Repository/user_repo";
+import { LoginResponse } from "@/types/User";
 
 export async function POST(request: NextRequest) {
   try {
-
     let body;
     try {
       body = await request.json();
@@ -16,24 +17,24 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    //validate the data from body using zod schema
+
     const parse = loginSchema.safeParse(body);
-   
-  
+
     if (!parse.success) {
       return NextResponse.json(
-        {error: parse.error.issues.map(i=>({path:i.path,message:i.message}))},
+        {
+          error: parse.error.issues.map((i) => ({
+            path: i.path,
+            message: i.message,
+          })),
+        },
         { status: 400 }
       );
     }
-    // Extract the validated data
-    const {data} = parse;
 
-    const targetUser = await prisma.user.findUnique({
-      where: {
-        email: data.email.trim().toLowerCase(),
-      },
-    });
+    const { data } = parse;
+    const repo = new User_Repo();
+    const targetUser = await repo.GetByEmail(data.email);
 
     if (!targetUser) {
       logger.warn("Login attempt failed: User not found");
@@ -48,23 +49,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updateUser = await prisma.user.update({
-      where: { email: targetUser.email },
-      data: { is_verified: true },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        is_verified: true,
-        created_at: true,
-      },
-    });
+    await repo.Update_Loged_User(targetUser.email);
 
-    logger.info(`User ${updateUser.email} logged in successfully`);
+    const loginResponse: LoginResponse = {
+      id: targetUser.id,
+      username: targetUser.username,
+      email: targetUser.email,
+      role: targetUser.role,
+      is_verified: targetUser.is_verified,
+      created_at: targetUser.created_at,
+    };
+
+    logger.info(`User ${targetUser.email} logged in successfully`);
 
     return NextResponse.json(
-      { message: "Login successful", data: { user: updateUser } },
+      { message: "Login successful", Login: loginResponse },
       { status: 200 }
     );
   } catch (error) {
