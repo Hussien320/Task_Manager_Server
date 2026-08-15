@@ -5,12 +5,7 @@ export class ItemNotFoundException extends Error {
     }
 }
 
-export class InvalidItemException extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "InvalidItemException";
-    }
-}
+
 
 export class DBException extends Error {
     constructor(message: string,error:Error) {

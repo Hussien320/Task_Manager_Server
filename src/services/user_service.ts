@@ -1,29 +1,37 @@
-import { User_Repo } from "@/repository/user_repo";
+import { user_repo } from "@/repository/user_repo";
 import bycrypt from "bcrypt";
 import logger from "@/utils/logger";
 import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { User } from "@/app/generated/prisma/browser";
+import { auth_service } from "./auth_service";
+
 export class User_Service {
-    static async Login(email:string,password:string):Promise<User>{
-       //see if user exists
-          const targetUser = await User_Repo.GetByEmail(email);
+    private static  isntnace:User_Service
+   static getinstance():User_Service{
+      if(!User_Service.isntnace){
+         User_Service.isntnace=new User_Service();
+
+      }
+      return User_Service.isntnace;
+   }
+     
+       async Update_VerfiedUser(email:string):Promise<void>{
+          await user_repo.Update_Loged_User(email);
+       }
+  async ValidateUser(email:string,pass:string):Promise<User>{
+       const targetUser = await user_repo.GetByEmail(email);
         
          if (!targetUser) {
       throw new ItemNotFoundException("User not found");
     }
     //compare pass
-    if (!bycrypt.compareSync(password, targetUser.pass_hash || "")) {
+    if (!bycrypt.compareSync(pass, targetUser.pass_hash || "")) {
       logger.warn("Login attempt failed: Invalid credentials");
       throw new BadRequestException("Bad request: invalid email or password");
     }
-    //genenrate the accestoken and refresh token
-
-    
-    //update the loged in user
-
-    await User_Repo.Update_Loged_User(targetUser.email);
     return targetUser;
-       }
-      
+}    
 }
+
+export const user_serivice=User_Service.getinstance();

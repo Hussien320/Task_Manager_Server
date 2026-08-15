@@ -3,12 +3,13 @@ import bycrypt from "bcrypt";
 
 import logger from "@/utils/logger";
 import { loginSchema } from "@/schemaValidations/schema";
-import { User_Repo } from "@/repository/user_repo";
+
 import { LoginResponse } from "@/types/User";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
-import { User_Service } from "@/services/user_service";
+import { user_serivice } from "@/services/user_service";
+import { auth_service } from "@/services/auth_service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,24 +32,39 @@ export async function POST(request: NextRequest) {
     }
 
     const { data } = parse;
-   const targetUser=await User_Service.Login(data.email,data.password); 
-   
-
+    //validate email and pass if macth
+    const user=await user_serivice.ValidateUser(data.email,data.password);
+     // ✅ Create response first
     const loginResponse: LoginResponse = {
-      id: targetUser.id,
-      username: targetUser.username,
-      email: targetUser.email,
-      role: targetUser.role,
-      is_verified: targetUser.is_verified,
-      created_at: targetUser.created_at,
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      is_verified: user.is_verified,
+      created_at: user.created_at,
     };
 
-    logger.info(`User ${targetUser.email} logged in successfully`);
-
-    return NextResponse.json(
-      { message: "Login successful", Login: loginResponse },
+    const response = NextResponse.json(
+      { 
+        success: true,
+        message: "Login successful", 
+        data: loginResponse 
+      },
       { status: 200 }
     );
+    //generate cookies and hashed rerfresh
+    await auth_service.persist_auth(response,{user_id:user.id});
+
+      //update logegd user
+      await user_serivice.Update_VerfiedUser(user.email);
+    
+  
+
+    
+
+    logger.info(`User ${user.email} logged in successfully`);
+
+    return response;
   } catch (error) {
     if (error instanceof ItemNotFoundException) {
       logger.warn(error.name + ": " + error.message);

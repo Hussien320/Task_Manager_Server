@@ -1,26 +1,18 @@
-import { id, IRepo } from "@/repository/IRepo";
- import { User, UserRole } from "@/app/generated/prisma/browser";
+
+ import { User } from "@/app/generated/prisma/browser";
 import { prisma } from "@/lib/db";
-import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
-export  class User_Repo implements IRepo<User> {
-   async  create(item: { id: string; username: string; email: string; pass_hash: string; role: UserRole; is_verified: boolean; last_login: Date | null; reset_password_token: string | null; reset_password_expiresAt: Date | null; refresh_token: string | null; refresh_token_expires_at: Date | null; created_at: Date; updated_at: Date; }): Promise<id> {
-        throw new Error("Method not implemented.");
+import { InvalidTokenException } from "@/utils/exceptions/http/AuthenticationException";
+import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException"
+import { use } from "react";
+export  class User_Repo{
+    private static instance:User_Repo;
+    static getinstance():User_Repo{
+        if(!User_Repo.instance){
+            User_Repo.instance=new User_Repo();
+        }
+        return User_Repo.instance;
     }
-    async GetById(id: id): Promise<{ id: string; username: string; email: string; pass_hash: string; role: UserRole; is_verified: boolean; last_login: Date | null; reset_password_token: string | null; reset_password_expiresAt: Date | null; refresh_token: string | null; refresh_token_expires_at: Date | null; created_at: Date; updated_at: Date; }> {
-        throw new Error("Method not implemented.");
-    }
-    async GetAll(): Promise<{ id: string; username: string; email: string; pass_hash: string; role: UserRole; is_verified: boolean; last_login: Date | null; reset_password_token: string | null; reset_password_expiresAt: Date | null; refresh_token: string | null; refresh_token_expires_at: Date | null; created_at: Date; updated_at: Date; }[]> {
-        throw new Error("Method not implemented.");
-    }
-    
-    async Update(u:User):Promise<id>{ 
-        throw new Error("Method not implemented.");
-    }
-  
-    async Delete(id: id): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-   static async GetByEmail(email:string):Promise<User>{
+       async GetByEmail(email:string):Promise<User>{
         try{
             const targetUser = await prisma.user.findUnique({
                 where: {
@@ -42,7 +34,7 @@ export  class User_Repo implements IRepo<User> {
         }
 
     }
-    static async Update_Loged_User(email:string):Promise<void>{
+    async Update_Loged_User(email:string):Promise<void>{
         try{
             await prisma.user.update({
                 where: {
@@ -59,8 +51,44 @@ export  class User_Repo implements IRepo<User> {
             throw new DBException("Error updating logged-in user", err as Error);
         }
     }
+    async Update_Refresh_token(user_id:string,token:string | null,expiraydate:Date | null):Promise<void>{
+        try{
+            await prisma.user.update({
+                where: { id: user_id },
+                data: {
+                    refresh_token: token,
+                    refresh_token_expires_at: expiraydate
+                    ,
+                },
+            });
 
+        }
+        catch(err){
+            throw new DBException('ERRO updating refersh token',err as Error);
+
+        }
+    }
+    async Get_User(user_id:string):Promise<User>{
+     try{
+        const target=await prisma.user.findUnique({
+            where:{
+                id:user_id
+            }
+        })
+        if(!target){
+            throw new ItemNotFoundException('user not found');
+        }
+        return target;
+     }  catch(err){
+        if(err instanceof ItemNotFoundException){
+            throw err
+        }
+        throw new DBException('Failed in getting user',err as Error);
+
+     } 
+    }
     
 
 
 }
+export const user_repo=User_Repo.getinstance();
