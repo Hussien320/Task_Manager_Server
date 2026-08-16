@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const parse = loginSchema.safeParse(body);
 
     if (!parse.success) {
-      throw new BadRequestException("Invalid login payload", {
+      throw new BadRequestException("Invalid login credntials", {
         errors: parse.error.issues.map((issue) => ({
           path: issue.path,
           message: issue.message,
@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
     //validate email and pass if macth
     const user=await user_serivice.ValidateUser(data.email,data.password);
      // ✅ Create response first
-    const loginResponse: LoginResponse = {
+  
+    //update logegd user
+      await user_serivice.Update_VerfiedUser(user.email);
+        const loginResponse: LoginResponse = {
       id: user.id,
       username: user.username,
       email: user.email,
@@ -55,9 +58,7 @@ export async function POST(request: NextRequest) {
     //generate cookies and hashed rerfresh
     await auth_service.persist_auth(response,{user_id:user.id});
 
-      //update logegd user
-      await user_serivice.Update_VerfiedUser(user.email);
-    
+   
   
 
     

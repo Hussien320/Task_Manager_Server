@@ -127,6 +127,25 @@ export class Auth_Service{
 
 
     }
+    clearAuthCookies(response: NextResponse): void {
+        // ✅ Delete auth_token by setting maxAge: 0
+        response.cookies.set('auth_token', '', {
+            httpOnly: true,
+            secure: config.is_Production,
+            sameSite: config.is_Production ? 'none' : 'lax',
+            maxAge: 0,  // ← Delete immediately
+            path: '/',
+        });
+
+        // ✅ Delete refresh_token by setting maxAge: 0
+        response.cookies.set('refresh_token', '', {
+            httpOnly: true,
+            secure: config.is_Production,
+            sameSite: config.is_Production ? 'none' : 'lax',
+            maxAge: 0,  // ← Delete immediately
+            path: '/',
+        });
+    }
 }
 
 

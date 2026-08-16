@@ -41,10 +41,9 @@ async function main() {
       email: "sara@example.com",
       pass_hash: employeePassword,
       role: UserRole.EMPLOYEE,
-      is_verified: true,
+      is_verified: false,
       last_login: new Date(),
-      refresh_token: employeeRefreshToken,
-      refresh_token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+   
     },
   });
 
