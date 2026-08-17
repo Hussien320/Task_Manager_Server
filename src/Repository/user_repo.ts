@@ -34,9 +34,9 @@ export  class User_Repo{
         }
 
     }
-    async Update_Loged_User(email:string):Promise<void>{
+    async Update_Loged_User(email:string):Promise<User>{
         try{
-            await prisma.user.update({
+     const updated_user=       await prisma.user.update({
                 where: {
                     email: email.trim().toLowerCase(),
                 },
@@ -45,6 +45,7 @@ export  class User_Repo{
                     is_verified: true,
                 },
             });
+            return updated_user
         }
         catch(err){
            
@@ -68,6 +69,22 @@ export  class User_Repo{
 
         }
     }
+    async Update_Reset_token(user_id:string,token:string | null,expiraydate:Date | null):Promise<void>{
+        try{
+            await  prisma.user.update({
+                where:{id:user_id},
+                data:{
+                      reset_password_token :token,
+                        reset_password_expiresAt:expiraydate
+                }
+
+            });
+        }
+        catch(err){
+            throw new DBException('ERRO updating refersh token',err as Error);
+
+        }
+        }
     async Get_User(user_id:string):Promise<User>{
      try{
         const target=await prisma.user.findUnique({

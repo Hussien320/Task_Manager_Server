@@ -37,14 +37,15 @@ export async function POST(request: NextRequest) {
      // ✅ Create response first
   
     //update logegd user
-      await user_serivice.Update_VerfiedUser(user.email);
+    const updated_user=  await user_serivice.Update_VerfiedUser(user.email);
+      
         const loginResponse: LoginResponse = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      is_verified: user.is_verified,
-      created_at: user.created_at,
+      id: updated_user.id,
+      username: updated_user.username,
+      email: updated_user.email,
+      role: updated_user.role,
+      is_verified: updated_user.is_verified,
+      created_at: updated_user.created_at,
     };
 
     const response = NextResponse.json(

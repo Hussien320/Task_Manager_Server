@@ -16,10 +16,11 @@ export class User_Service {
       return User_Service.isntnace;
    }
      
-       async Update_VerfiedUser(email:string):Promise<void>{
-          await user_repo.Update_Loged_User(email);
+       async Update_VerfiedUser(email:string):Promise<User>{
+          const updated_user=await user_repo.Update_Loged_User(email);
+          return updated_user;
        }
-  async ValidateUser(email:string,pass:string):Promise<User>{
+  async ValidateUser(email:string,pass:string ):Promise<User>{
        const targetUser = await user_repo.GetByEmail(email);
         
          if (!targetUser) {
@@ -32,6 +33,14 @@ export class User_Service {
     }
     return targetUser;
 }    
+   async GetUser_ByEmail(email:string):Promise<User>{
+      const user=await user_repo.GetByEmail(email);
+      if(!user){
+         logger.error('User not found');
+         throw new ItemNotFoundException('user not found');
+      }
+      return user;
+   }
 }
 
 export const user_serivice=User_Service.getinstance();

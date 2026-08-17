@@ -1,4 +1,5 @@
 
+import crypto from 'crypto';
 import bcrypt from "bcrypt"
 import config from '@/lib/config';
 import { UserPayload } from '@/types/tokenpayload';
@@ -8,14 +9,16 @@ import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import { NextResponse } from 'next/server';
 import { user_repo } from "@/repository/user_repo";
-import { Palanquin } from "next/font/google";
+
+
 export class Auth_Service{
     private static isntance:Auth_Service;
     constructor(
         private accessSecret=config.auth.jwtSecret,
         private expiration=config.auth.expiration,
         private refreshSecret=config.auth.RefreshSecret,
-        private refresh_expiration=config.auth.refreshExpiration
+        private refresh_expiration=config.auth.refreshExpiration,
+        private reset_expiration=config.auth.resetExpiration
 
     ){}
     static getinstance():Auth_Service{
@@ -29,6 +32,19 @@ export class Auth_Service{
     }
     generateRefreshToken(payload:UserPayload):string{
         return jwt.sign(payload,this.refreshSecret,{expiresIn:this.refresh_expiration});
+
+    }
+    generateResetToken():{code:string,expiresAt:Date}{
+          // Generate 6-digit code
+    const min = 100000;
+    const max = 999999;
+    const code = crypto.randomInt(min, max + 1).toString();
+    
+    // Calculate expiration date (e.g., 15 minutes from now)
+    const expiresAt = new Date(Date.now() + ms(this.reset_expiration));
+    
+    return { code, expiresAt };
+
     }
     valiadteAccesToken(token:string):UserPayload{
         try{
@@ -47,6 +63,7 @@ export class Auth_Service{
             throw new InvalidTokenException();
         }
     }
+    
     setAccessCookie(res:NextResponse,token:string){
         res.cookies.set(
             'auth_token',token,{
@@ -70,6 +87,7 @@ export class Auth_Service{
             
         )
     }
+    
     async persist_auth(res:NextResponse,payload:UserPayload){
         //genrate access and refresh token
         const accesstoken=this.generateAccessToken(payload);
@@ -85,8 +103,18 @@ export class Auth_Service{
         await user_repo.Update_Refresh_token(payload.user_id,hashed_refresh,exp)
 
     }
+    async persist_reset(res:NextResponse,payload:UserPayload){
+        //genrate token
+        const {code,expiresAt}=this.generateResetToken()
+        //hash the code to store in db
+        const hashed=await bcrypt.hash(code,10);
+        //store it in db
+        await user_repo.Update_Reset_token(payload.user_id,hashed,expiresAt);
+        return code;
+         
+    }
     async refresh(refreshtoken:string){
-        //verfy the refreshtoken
+        //verfy the refreshto ken
         const payload=this.validateRefrshToken(refreshtoken);
         //see if the user  have this refresh token inside db
         const user=await user_repo.Get_User(payload.user_id);
