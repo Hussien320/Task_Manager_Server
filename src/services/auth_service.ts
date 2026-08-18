@@ -113,6 +113,33 @@ export class Auth_Service{
         return code;
          
     }
+    async verResetToken(email:string,providedtoken:string){
+        const resetdata=await user_repo.GetByEmail(email);
+        if(resetdata.reset_password_token==null){
+        logger.error('no reset token');
+        return false
+
+      
+        }
+        //check expired date
+        if(!resetdata.reset_password_expiresAt ||new Date()>resetdata.reset_password_expiresAt) {
+            logger.error('expired token');
+     
+            return false
+
+        }
+         
+        const isMatch=await bcrypt.compare(providedtoken,resetdata.reset_password_token);
+        if(!isMatch){
+            logger.error('wrong code')
+         
+            return false
+
+    
+        }
+        return true;
+
+    }
     async refresh(refreshtoken:string){
         //verfy the refreshto ken
         const payload=this.validateRefrshToken(refreshtoken);
@@ -155,6 +182,12 @@ export class Auth_Service{
 
 
     }
+    async Logout(id:string){
+        
+        await user_repo.Update_Not_Verfied_User(id);
+
+    }
+   
     clearAuthCookies(response: NextResponse): void {
         // ✅ Delete auth_token by setting maxAge: 0
         response.cookies.set('auth_token', '', {

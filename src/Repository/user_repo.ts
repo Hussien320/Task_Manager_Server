@@ -103,8 +103,35 @@ export  class User_Repo{
         throw new DBException('Failed in getting user',err as Error);
 
      } 
+   
     }
-    
+     async Update_User_Pass(email:string,pass:string):Promise<void>{
+        await prisma.user.update({
+            where:{
+                email:email
+            },
+            data:{
+                pass_hash:pass,
+                reset_password_token:null,
+                reset_password_expiresAt:null
+            }
+        })
+       
+
+     }
+ async Update_Not_Verfied_User(user_id:string){
+
+        await prisma.user.update({
+            where:{
+                id:user_id
+            },
+            data:{
+                is_verified:false,
+                refresh_token:null,
+                refresh_token_expires_at:null
+            }
+        })    
+        }    
 
 
 }

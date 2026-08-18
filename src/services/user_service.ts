@@ -41,6 +41,9 @@ export class User_Service {
       }
       return user;
    }
+   async Update_Pass(email:string,pass:string){
+      await user_repo.Update_User_Pass(email,pass);
+   }
 }
 
 export const user_serivice=User_Service.getinstance();
