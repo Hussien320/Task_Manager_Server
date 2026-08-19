@@ -19,20 +19,17 @@ async function main() {
 
   const adminPassword = await bcrypt.hash("password123", 10);
   const employeePassword = await bcrypt.hash("password123", 10);
-  const adminRefreshToken = await bcrypt.hash("admin-refresh-token", 10);
-  const employeeRefreshToken = await bcrypt.hash("employee-refresh-token", 10);
-
+ 
+  
   const adminUser = await prisma.user.create({
     data: {
-      username: "ali",
-      email: "ali@example.com",
+      username: "hussien",
+      email: "husssienzoughaib@gmail.com",
       pass_hash: adminPassword,
       role: UserRole.ADMIN,
-      is_verified: true,
-      last_login: new Date(),
-      refresh_token: adminRefreshToken,
-      refresh_token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
+      is_verified: false,
+      last_login: new Date()
+    }
   });
 
   const employeeUser = await prisma.user.create({
@@ -41,10 +38,9 @@ async function main() {
       email: "sara@example.com",
       pass_hash: employeePassword,
       role: UserRole.EMPLOYEE,
-      is_verified: true,
+      is_verified: false,
       last_login: new Date(),
-      refresh_token: employeeRefreshToken,
-      refresh_token_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+   
     },
   });
 
