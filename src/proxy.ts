@@ -7,7 +7,7 @@ import {
     InvalidTokenException, 
     TokenNotFoundException 
 } from "./utils/exceptions/http/AuthenticationException";
-import logger from "./utils/logger";
+
 
 // ============================================
 // STEP 1: Define public routes
@@ -53,16 +53,16 @@ export async function proxy(req: NextRequest) {
         // ============================================
         if (auth_token) {
             try {
-                const payload = await auth_service.valiadteAccesToken(auth_token);
+                const payload = await auth_service.validateAccesToken(auth_token);
                 
                 // ✅ Token valid - add user to headers
                 const requestHeaders = new Headers(req.headers);
                 requestHeaders.set('x-user-id', payload.user_id);
                 
-                console.log
-                (`[Middleware] Access token valid for user: ${payload.user_id}`);
+                console.log (`[Middleware] Access token valid for user: ${payload.user_id}`);
                 
                 return NextResponse.next({
+               
                     request: {
                         headers: requestHeaders,
                     },
@@ -70,8 +70,8 @@ export async function proxy(req: NextRequest) {
 
             } catch (err) {
                 if (err instanceof AuthenticationException) {
-                    console.log();
-                    ('[Middleware] Access token invalid, trying refresh...');
+                    console.log ('[Middleware] Access token invalid, trying refresh...');
+                   
                     // ✅ Continue to refresh
                 } else {
                     // Unexpected error - re-throw
@@ -95,7 +95,7 @@ export async function proxy(req: NextRequest) {
                 auth_service.setRefreshCookie(response, new_refresh); // ← Refresh token (FIXED!)
                 
                 // ✅ Get user from new access token
-                const payload = auth_service.valiadteAccesToken(new_acces);
+                const payload = auth_service.validateAccesToken(new_acces);
                 
                 // ✅ Add user to headers
                 const requestHeaders = new Headers(req.headers);
@@ -137,7 +137,7 @@ export async function proxy(req: NextRequest) {
         // ============================================
         // STEP 7: No valid tokens
         // ============================================
-        logger.warn(`[Middleware] No valid tokens for: ${currentpath}`);
+        console.log(`[Middleware] No valid tokens for: ${currentpath}`);
         
         const response = NextResponse.json(
             { 
@@ -153,7 +153,7 @@ export async function proxy(req: NextRequest) {
         // ============================================
         // STEP 8: Global error handler
         // ============================================
-        logger.error('[Middleware] Unexpected error:', err);
+        console.log('[Middleware] Unexpected error:', err);
         
         const response = NextResponse.json(
             { 

@@ -12,7 +12,7 @@ import { user_repo } from "@/repository/user_repo";
 
 
 export class Auth_Service{
-    private static isntance:Auth_Service;
+    private static instance:Auth_Service;
     constructor(
         private accessSecret=config.auth.jwtSecret,
         private expiration=config.auth.expiration,
@@ -22,10 +22,10 @@ export class Auth_Service{
 
     ){}
     static getinstance():Auth_Service{
-        if(!Auth_Service.isntance){
-            Auth_Service.isntance=new Auth_Service();
+        if(!Auth_Service.instance){
+            Auth_Service.instance=new Auth_Service();
         }
-        return Auth_Service.isntance;
+        return Auth_Service.instance;
     }
  generateAccessToken(payload:UserPayload):string{
        return jwt.sign(payload,this.accessSecret,{expiresIn:this.expiration});
@@ -46,7 +46,7 @@ export class Auth_Service{
     return { code, expiresAt };
 
     }
-    valiadteAccesToken(token:string):UserPayload{
+    validateAccesToken(token:string):UserPayload{
         try{
                return  jwt.verify(token,this.accessSecret) as UserPayload;
         }
@@ -55,7 +55,7 @@ export class Auth_Service{
             throw new AuthenticationException('invalid acces token');
         }
     }
-    validateRefrshToken(token:string):UserPayload{
+    validateRefreshToken(token:string):UserPayload{
         try{
              return jwt.verify(token,this.refreshSecret) as UserPayload;
         }
@@ -142,7 +142,7 @@ export class Auth_Service{
     }
     async refresh(refreshtoken:string){
         //verfy the refreshto ken
-        const payload=this.validateRefrshToken(refreshtoken);
+        const payload=this.validateRefreshToken(refreshtoken);
         //see if the user  have this refresh token inside db
         const user=await user_repo.Get_User(payload.user_id);
         //check if user have the token or even exist

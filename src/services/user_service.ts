@@ -7,13 +7,13 @@ import { User } from "@/app/generated/prisma/browser";
 import { auth_service } from "./auth_service";
 
 export class User_Service {
-    private static  isntnace:User_Service
+    private static  instance:User_Service
    static getinstance():User_Service{
-      if(!User_Service.isntnace){
-         User_Service.isntnace=new User_Service();
+      if(!User_Service.instance){
+         User_Service.instance=new User_Service();
 
       }
-      return User_Service.isntnace;
+      return User_Service.instance;
    }
      
        async Update_VerfiedUser(email:string):Promise<User>{

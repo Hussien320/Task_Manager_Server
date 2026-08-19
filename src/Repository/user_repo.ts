@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db";
 import { InvalidTokenException } from "@/utils/exceptions/http/AuthenticationException";
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException"
-import { use } from "react";
+
 export  class User_Repo{
     private static instance:User_Repo;
     static getinstance():User_Repo{

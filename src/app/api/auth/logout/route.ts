@@ -3,7 +3,7 @@ import { user_serivice } from "@/services/user_service";
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request:NextRequest){
+export async function POST(request:NextRequest){
     try{
          const userId = request.headers.get('x-user-id');
         

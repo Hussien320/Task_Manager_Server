@@ -19,9 +19,8 @@ async function main() {
 
   const adminPassword = await bcrypt.hash("password123", 10);
   const employeePassword = await bcrypt.hash("password123", 10);
-  const adminRefreshToken = await bcrypt.hash("admin-refresh-token", 10);
-  const employeeRefreshToken = await bcrypt.hash("employee-refresh-token", 10);
-
+ 
+  
   const adminUser = await prisma.user.create({
     data: {
       username: "hussien",

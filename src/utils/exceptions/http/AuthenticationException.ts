@@ -1,5 +1,5 @@
 
-import { HttpException } from "@/utils/exceptions/http/HttpException "
+import { HttpException } from "@/utils/exceptions/http/HttpException"
 
 export class AuthenticationException extends HttpException {
     constructor(message: string = "Authentication failed") {
@@ -15,7 +15,7 @@ export class InvalidTokenException extends AuthenticationException {
 }
 export class TokenNotFoundException extends AuthenticationException{
  constructor() {
-        super("Tokrn Not Found");
+        super("Token Not Found");
         this.name = "TokenNotFoundException";
     }   
 } 

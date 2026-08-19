@@ -22,7 +22,7 @@ import { NextRequest,NextResponse } from "next/server";
         //validate the email
         const parse=ForgotPassSchema.safeParse(body);
           if (!parse.success) {
-      throw new BadRequestException("Invalid forgor_pass credntials", {
+      throw new BadRequestException("Invalid forgot_pass credntials", {
         errors: parse.error.issues.map((issue) => ({
           path: issue.path,
           message: issue.message,
@@ -78,9 +78,9 @@ import { NextRequest,NextResponse } from "next/server";
       return NextResponse.json({ message: error.name + ": " + error.message }, { status: 404 });
     }
       if (error instanceof DBException) {
-      logger.error(`Database error during login: ${error.message}`, error);
+      logger.error(`Database error  ${error.message}`, error);
       return NextResponse.json(
-        { message: "Database error while processing login" },
+        { message: "Database error while processing " },
         { status: 500 }
       );
     }

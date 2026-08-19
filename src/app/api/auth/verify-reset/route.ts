@@ -51,7 +51,7 @@ export async function POST(request:NextRequest) {
         { status: 400 }
       );
         }
-         logger.error("Login route failed", error);
+         logger.error("verify_reset route failed", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
