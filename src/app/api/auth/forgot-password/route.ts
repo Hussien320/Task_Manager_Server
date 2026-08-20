@@ -2,6 +2,7 @@ import { emailService } from "@/lib/email.service";
 import { ForgotPassSchema } from "@/schemaValidations/schema";
 import { auth_service } from "@/services/auth_service";
 import { user_serivice } from "@/services/user_service";
+import { toRole } from "@/types/roles";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { DBException } from "@/utils/exceptions/RepoException";
 import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
@@ -41,7 +42,7 @@ import { NextRequest,NextResponse } from "next/server";
           { status: 200 }
         );
     //generate reset token for the pass 
-    const code=await auth_service.persist_reset(response,{user_id:target_user.id});
+    const code=await auth_service.persist_reset(response,{user_id:target_user.id,user_role:toRole(target_user.role)});
     //email generating service 
       try {
             await emailService.sendResetPasswordEmail(target_user.email, code);

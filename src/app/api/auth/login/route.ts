@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import bycrypt from "bcrypt";
+
 
 import logger from "@/utils/logger";
 import { loginSchema } from "@/schemaValidations/schema";
@@ -10,6 +10,7 @@ import { BadRequestException } from "@/utils/exceptions/http/BadRequestException
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import { user_serivice } from "@/services/user_service";
 import { auth_service } from "@/services/auth_service";
+import { toRole } from "@/types/roles";
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
     //generate cookies and hashed rerfresh
-    await auth_service.persist_auth(response,{user_id:user.id});
+    await auth_service.persist_auth(response,{user_id:user.id,user_role:toRole(user.role)});
 
    
   

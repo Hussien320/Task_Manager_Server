@@ -54,11 +54,12 @@ export async function proxy(req: NextRequest) {
         if (auth_token) {
             try {
                 const payload = await auth_service.validateAccesToken(auth_token);
-                
+                const user_id=payload.user_id;
+                const user_role=payload.user_role            
                 // ✅ Token valid - add user to headers
                 const requestHeaders = new Headers(req.headers);
                 requestHeaders.set('x-user-id', payload.user_id);
-                
+                 requestHeaders.set('x-user-role', user_role); 
                 console.log (`[Middleware] Access token valid for user: ${payload.user_id}`);
                 
                 return NextResponse.next({
@@ -96,10 +97,13 @@ export async function proxy(req: NextRequest) {
                 
                 // ✅ Get user from new access token
                 const payload = auth_service.validateAccesToken(new_acces);
+                const user_id=payload.user_id;
+                const user_role=payload.user_role
                 
                 // ✅ Add user to headers
                 const requestHeaders = new Headers(req.headers);
                 requestHeaders.set('x-user-id', payload.user_id);
+                   requestHeaders.set('x-user-role', user_role); 
                 
                 console.log(`[Middleware] Tokens refreshed for user: ${payload.user_id}`);
                 

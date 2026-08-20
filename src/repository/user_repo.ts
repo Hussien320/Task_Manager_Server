@@ -1,7 +1,7 @@
 
- import { User } from "@/app/generated/prisma/browser";
+ import { User } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db";
-import { InvalidTokenException } from "@/utils/exceptions/http/AuthenticationException";
+
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException"
 
 export  class User_Repo{
