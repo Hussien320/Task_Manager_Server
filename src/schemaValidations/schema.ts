@@ -1,3 +1,4 @@
+import { ProductType } from "@/app/generated/prisma/enums";
 import z from "zod";
 
 export const loginSchema = z.object({
@@ -39,3 +40,13 @@ export const ResetPassSchema=z.object({
     token:z.
     string()
 })
+export const CreatSupplierSchema=z.object({
+  name:  z
+        .string()
+        .trim()
+        .min(1, { message: "Supplier name is required" })
+        .min(2, { message: "Supplier name must be at least 2 characters" })
+        .max(100, { message: "Supplier name is too long" }),
+      product_type: z.enum(Object.values(ProductType) as [string, ...string[]]),  
+    })
+    

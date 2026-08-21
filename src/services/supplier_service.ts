@@ -1,6 +1,8 @@
 
+
+import { ProductType } from "@/app/generated/prisma/enums";
 import { suplier_repo } from "@/repository/supplier_repo";
-import { SupplierListResponse, toSupplierResponseArray } from "@/types/Supplier";
+import { SupplierListResponse, SupplierResponse, toSupplierResponse, toSupplierResponseArray } from "@/types/Supplier";
 
 export class Supplier_Service{
     private static instance:Supplier_Service
@@ -11,6 +13,7 @@ export class Supplier_Service{
         return Supplier_Service.instance;
     }
     async Get_All_Suppliers():Promise<SupplierListResponse>{
+        
         const suppliers=await suplier_repo.Get_All_Suppliers();
 
         const mapped_response= toSupplierResponseArray(suppliers);
@@ -19,5 +22,14 @@ export class Supplier_Service{
             total:mapped_response.length
         }
     }
-}
+    async Creat_Supplier(data:{name:string,product_type:ProductType}):Promise<SupplierResponse>{
+        const created_supplier=await suplier_repo.Create_Supplier({name:data.name,product_type:data.product_type});
+        const mapped_result=toSupplierResponse(created_supplier);
+        return mapped_result;
+           
+        }
+
+    }
+ 
+
 export const supplier_service=Supplier_Service.getinstance();

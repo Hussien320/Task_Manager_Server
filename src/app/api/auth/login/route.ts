@@ -76,7 +76,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof BadRequestException) {
       logger.warn(error.name + ": " + error.message);
       return NextResponse.json(
-        { message: error.name + ": " + error.message},
+        {message: error.name + ": " + error.message,
+            errors: error.details?.errors || error.details, // ← Include details
+            success: false},
         { status: 400 }
       );
     
