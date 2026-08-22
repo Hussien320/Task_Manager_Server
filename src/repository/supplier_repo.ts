@@ -26,13 +26,16 @@ export class Supplier_repo{
             throw new DBException('couldnt load suppliers',err as Error);
         }  
     }
-    async Get_Active_Supplier(id:string):Promise<Supplier | null>{
+    async Get_Active_Suppliers():Promise<Supplier[]>{
         try{
-            const active_supplier=await prisma.supplier.findFirst({
+            const active_supplier=await prisma.supplier.findMany({
                 where:{
-                    id:id,
+                    
                     is_active:true
-                }
+                },
+                 orderBy:[
+                    {name:'asc'}
+                ],
             
             })
             return active_supplier;

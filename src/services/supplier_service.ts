@@ -25,6 +25,15 @@ export class Supplier_Service{
             total:mapped_response.length
         }
     }
+    async Get_Active_Suppliers():Promise<SupplierListResponse >{
+        const active_suppliers=await suplier_repo.Get_Active_Suppliers()
+         const mapped_response= toSupplierResponseArray(active_suppliers);
+        return {
+            suppliers:mapped_response,
+            total:mapped_response.length
+        }
+
+    }
     async Creat_Supplier(data:{name:string,product_type:ProductType}):Promise<SupplierResponse>{
         const created_supplier=await suplier_repo.Create_Supplier({name:data.name,product_type:data.product_type});
         const mapped_result=toSupplierResponse(created_supplier);

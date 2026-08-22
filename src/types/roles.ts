@@ -46,6 +46,7 @@ export enum PERMISSION {
   UPDATE_SUPPLIER = 'supplier:update',
   DELETE_SUPPLIER = 'supplier:delete',
   READ_ALL_SUPPLIERS = 'supplier:read:all',
+ 
   
   // C.2 Employee Management 
   CREATE_EMPLOYEE = 'employee:create',
@@ -108,6 +109,7 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     PERMISSION.UPDATE_SUPPLIER,
     PERMISSION.DELETE_SUPPLIER,
     PERMISSION.READ_SUPPLIER,
+    
 
     // Employee Management (CRUD)
     PERMISSION.CREATE_EMPLOYEE,
