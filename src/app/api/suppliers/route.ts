@@ -2,9 +2,10 @@ import { authGuard } from "@/lib/auth/guard";
 
 import { supplier_service } from "@/services/supplier_service";
 import { PERMISSION } from "@/types/roles";
-import { toSupplierResponseArray } from "@/types/Supplier";
+
 import { AuthorizationException, InsufficientPermissionsException, InvalidRoleException } from "@/utils/exceptions/http/AutharizationException";
 import { AuthenticationException } from "@/utils/exceptions/http/AuthenticationException";
+
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -126,3 +127,4 @@ export async function GET(request:NextRequest){
         );
     }
 }
+

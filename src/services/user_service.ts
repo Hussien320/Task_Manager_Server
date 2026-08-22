@@ -4,7 +4,7 @@ import logger from "@/utils/logger";
 import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { User } from "@/app/generated/prisma/browser";
-import { auth_service } from "./auth_service";
+
 
 export class User_Service {
     private static  instance:User_Service

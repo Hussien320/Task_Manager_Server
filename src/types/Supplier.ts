@@ -25,17 +25,5 @@ export  function toSupplierResponse(supplier: Supplier): SupplierResponse {
     export function  toSupplierResponseArray(suppliers: Supplier[]): SupplierResponse[] {
         return suppliers.map(supplier => toSupplierResponse(supplier));
     }
-    export function toType(type: string): ProductType {
-      const roleMap: Record<string, ProductType> = {
-        'PLASTIC': ProductType.PLASTIC,
-        'CLEANING': ProductType.CLEANING,
-        'VEGTABLE':ProductType.VEGTABLE
-      };
-       const mappedType = roleMap[type.toLowerCase()];
-  if (!mappedType) {
-    throw new Error(`Invalid role: ${type}`);
-  }
-  return mappedType;
-      
-    }
+   
       
