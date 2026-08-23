@@ -106,9 +106,10 @@ export  class User_Repo{
    
     }
      async Update_User_Pass(email:string,pass:string):Promise<void>{
+        try{
         await prisma.user.update({
             where:{
-                email:email
+                email:email.trim().toLowerCase()
             },
             data:{
                 pass_hash:pass,
@@ -116,7 +117,10 @@ export  class User_Repo{
                 reset_password_expiresAt:null
             }
         })
-       
+        }
+        catch(err){
+            throw new DBException("Error updating user password", err as Error);
+        }
 
      }
  async Update_Not_Verfied_User(user_id:string){

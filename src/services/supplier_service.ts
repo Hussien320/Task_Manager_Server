@@ -4,6 +4,7 @@ import { ProductType } from "@/app/generated/prisma/enums";
 import { suplier_repo } from "@/repository/supplier_repo";
 import { SupplierListResponse, SupplierResponse, toSupplierResponse, toSupplierResponseArray } from "@/types/Supplier";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
+import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
 
 
 
@@ -41,26 +42,17 @@ export class Supplier_Service{
            
         }
         async Soft_Delete(id:string):Promise<void>{
-            try{
-                //check if the supplier is already set to inactive
-                const target_supplier=await suplier_repo.Get_Supplier_By_Id(id);
+            //check if the supplier is already set to inactive
+            const target_supplier=await suplier_repo.Get_Supplier_By_Id(id);
 
-                if(!target_supplier){
-                  
-                    throw new BadRequestException('suuplier not found');
-                }
-                    if (!target_supplier.is_active) {
+            if(!target_supplier){
+                throw new ItemNotFoundException('supplier not found');
+            }
+            if (!target_supplier.is_active) {
                 throw new BadRequestException('Supplier already deactivated');
             }
-                //supplier is active
-                await suplier_repo.softDelete(id);
-
-            }
-            catch(error){
-                if(error instanceof BadRequestException){
-                    throw error
-                }
-            }
+            //supplier is active
+            await suplier_repo.softDelete(id);
         }
 
     }

@@ -8,6 +8,7 @@ import { DBException } from "@/utils/exceptions/RepoException";
 import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 import { NextRequest,NextResponse } from "next/server";
+import { success } from "zod";
 ;
 
  export async function POST(req:NextRequest){
@@ -70,7 +71,10 @@ import { NextRequest,NextResponse } from "next/server";
        if (error instanceof BadRequestException) {
             logger.warn(error.name + ": " + error.message);
             return NextResponse.json(
-              { message: error.name + ": " + error.message},
+              { message: error.name + ": " + error.message,
+                 errors: error.details?.errors || error.details,
+                 success:false
+              },
               { status: 400 }
             );
           }

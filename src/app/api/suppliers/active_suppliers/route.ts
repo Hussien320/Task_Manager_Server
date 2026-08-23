@@ -3,7 +3,7 @@ import { supplier_service } from "@/services/supplier_service";
 import { ROLE } from "@/types/roles";
 import { AuthorizationException, InsufficientPermissionsException, InvalidRoleException } from "@/utils/exceptions/http/AutharizationException";
 import { AuthenticationException } from "@/utils/exceptions/http/AuthenticationException";
-import { DBException } from "@/utils/exceptions/RepoException";
+import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -72,6 +72,18 @@ export async function GET(request:NextRequest){
                             { status: 401 }
                         );
                     }
+                    if (error instanceof ItemNotFoundException) {
+                        logger.warn(`Item not found: ${error.message}`);
+                        return NextResponse.json(
+                            {
+                                success: false,
+                                message: error.message || 'Resource not found',
+                                errorType: 'ItemNotFoundException'
+                            },
+                            { status: 404 }
+                        );
+                    }
+
                       if (error instanceof DBException) {
             logger.error(`Database error: ${error.message}`);
             return NextResponse.json(

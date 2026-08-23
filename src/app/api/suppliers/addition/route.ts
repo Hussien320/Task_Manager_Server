@@ -58,8 +58,8 @@ export async function POST(req:NextRequest){
             logger.error('supplier already there');
             return NextResponse.json({
                 success:false,
-                meessage:'supplier arleady ceraeted',
-                errorType:'Itemexists'  
+                message:'supplier already created',
+                errorType:'ItemExists'
             }
         ,
         {status:400}

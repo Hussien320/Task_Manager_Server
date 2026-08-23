@@ -2,6 +2,7 @@ import { ResetPassSchema } from "@/schemaValidations/schema";
 import { auth_service } from "@/services/auth_service";
 import { user_serivice } from "@/services/user_service";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
+import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt"
@@ -47,8 +48,27 @@ export async function POST(request:NextRequest) {
         if(error  instanceof BadRequestException){
              logger.warn(error.name + ": " + error.message);
       return NextResponse.json(
-        { message: error.name + ": " + error.message},
+        { message: error.name + ": " + error.message,
+              errors: error.details?.errors || error.details,
+                 success:false
+        },
         { status: 400 }
+      );
+        }
+        if(error instanceof ItemNotFoundException){
+            logger.warn(error.name + ": " + error.message);
+      return NextResponse.json(
+        { message: error.name + ": " + error.message,
+             success:false
+        },
+        { status: 404 }
+      );
+        }
+        if(error instanceof DBException){
+            logger.error(`Database error  ${error.message}`, error);
+      return NextResponse.json(
+        { message: "Database error while processing " },
+        { status: 500 }
       );
         }
          logger.error("verify_reset route failed", error);
