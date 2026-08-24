@@ -1,7 +1,8 @@
-import { ResetPassSchema } from "@/schemaValidations/schema";
-import { auth_service } from "@/services/auth_service";
-import { user_serivice } from "@/services/user_service";
+import { resetPasswordSchema } from "@/schemaValidations/schema";
+import { authService } from "@/services/AuthService";
+import { userService } from "@/services/UserService";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
+import { handleRouteError } from "@/utils/handleRouteError";
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt"
@@ -13,9 +14,9 @@ export async function POST(request:NextRequest) {
             } catch {
               throw new BadRequestException("Bad request: request body must be valid JSON");
             }
-        
-            const parse = ResetPassSchema.safeParse(body);
-           
+
+            const parse = resetPasswordSchema.safeParse(body);
+
             if (!parse.success) {
                 logger.error('Validation failed', {
     errors: parse.error.issues.map((issue) => ({
@@ -32,30 +33,18 @@ export async function POST(request:NextRequest) {
             }
             const {data}=parse
             //validate the token
-            const is_validated=await auth_service.verResetToken(data.email,data.token);
-            if(!is_validated){
+            const isValidated=await authService.verifyResetToken(data.email,data.token);
+            if(!isValidated){
                 throw new BadRequestException('Invalid Token')
             }
             //update the pass
            const hashed=await bcrypt.hash(data.password,10);
-            await user_serivice.Update_Pass(data.email,hashed);
+            await userService.updatePassword(data.email,hashed);
                 logger.info(`Password updated successfully for email: ${data.email}`);
     return NextResponse.json({ message: 'Password updated successfully' },{status:200});
 
     }
     catch(error){
-        if(error  instanceof BadRequestException){
-             logger.warn(error.name + ": " + error.message);
-      return NextResponse.json(
-        { message: error.name + ": " + error.message},
-        { status: 400 }
-      );
-        }
-         logger.error("verify_reset route failed", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
-
+        return handleRouteError(error, { operation: 'verify_reset' });
     }
 }

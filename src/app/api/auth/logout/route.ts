@@ -1,12 +1,12 @@
-import { auth_service } from "@/services/auth_service";
-import { user_serivice } from "@/services/user_service";
+import { authService } from "@/services/AuthService";
+
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request:NextRequest){
     try{
          const userId = request.headers.get('x-user-id');
-        
+
         if (!userId) {
             logger.warn('Logout attempted without user ID');
             return NextResponse.json(
@@ -14,15 +14,15 @@ export async function POST(request:NextRequest){
                 { status: 401 }
             );
         }
-        await auth_service.Logout(userId);
-       
-        
-      
+        await authService.logout(userId);
+
+
+
          const response = NextResponse.json({
             success: true,
             message: 'Logged out successfully',
         });
-        await auth_service.clearAuthCookies(response);
+        await authService.clearAuthCookies(response);
          logger.info(`User ${userId} logged out successfully`);
 
         return response;

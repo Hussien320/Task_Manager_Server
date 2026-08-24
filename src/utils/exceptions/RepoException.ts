@@ -13,5 +13,12 @@ export class DBException extends Error {
         this.name = "DBException";
         this.stack=error.stack;
         this.message=`${message}: ${error.message}`;
-    }   
+    }  
+} 
+    export class ItemExists extends Error {
+    constructor() {
+        super('item arleady exists');
+        this.name = "ItemExists";
+        
+    }  
 }
