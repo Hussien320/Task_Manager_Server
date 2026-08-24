@@ -1,15 +1,15 @@
-// src/tests/suppliers_id.route.test.ts
+// src/tests/suppliers.id.put.route.test.ts
 import { NextResponse, type NextRequest } from "next/server";
 
 import { PUT } from "@/app/api/suppliers/[id]/route";
 import { authGuard } from "@/lib/auth/guard";
-import { supplier_service } from "@/services/supplier_service";
-import { PERMISSION } from "@/types/roles";
+import { supplierService } from "@/services/SupplierService";
+import { PERMISSION } from "@/types/Roles";
 import {
   AuthorizationException,
   InsufficientPermissionsException,
   InvalidRoleException,
-} from "@/utils/exceptions/http/AutharizationException";
+} from "@/utils/exceptions/http/AuthorizationException";
 import { AuthenticationException } from "@/utils/exceptions/http/AuthenticationException";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
@@ -19,9 +19,9 @@ jest.mock("@/lib/auth/guard", () => ({
   authGuard: jest.fn(),
 }));
 
-jest.mock("@/services/supplier_service", () => ({
-  supplier_service: {
-    Soft_Delete: jest.fn(),
+jest.mock("@/services/SupplierService", () => ({
+  supplierService: {
+    softDelete: jest.fn(),
   },
 }));
 
@@ -34,8 +34,8 @@ jest.mock("@/utils/logger", () => ({
   },
 }));
 
-const mocked_guard = authGuard as jest.MockedFunction<typeof authGuard>;
-const mocked_supplier_service = supplier_service as jest.Mocked<typeof supplier_service>;
+const mockedGuard = authGuard as jest.MockedFunction<typeof authGuard>;
+const mockedSupplierService = supplierService as jest.Mocked<typeof supplierService>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /** The route never reads the request — `authGuard` is mocked, so an empty object suffices. */
@@ -45,7 +45,7 @@ function makeRequest(): NextRequest {
 
 /**
  * The handler's second argument. In this Next.js version `params` is a **Promise**
- * (`[id]/route.ts:11`), so the test has to hand over a promise, not a plain object.
+ * (`[id]/route.ts`), so the test has to hand over a promise, not a plain object.
  */
 function makeContext(id: string) {
   return { params: Promise.resolve({ id }) };
@@ -55,8 +55,8 @@ const SUPPLIER_ID = "sup-1";
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mocked_guard.mockReturnValue(null);
-  mocked_supplier_service.Soft_Delete.mockResolvedValue(undefined as never);
+  mockedGuard.mockReturnValue(null);
+  mockedSupplierService.softDelete.mockResolvedValue(undefined as never);
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -73,16 +73,16 @@ describe("PUT /api/suppliers/[id]", () => {
     it("soft-deletes the supplier named in the route params", async () => {
       await PUT(makeRequest(), makeContext(SUPPLIER_ID));
 
-      expect(mocked_supplier_service.Soft_Delete).toHaveBeenCalledTimes(1);
-      expect(mocked_supplier_service.Soft_Delete).toHaveBeenCalledWith(SUPPLIER_ID);
+      expect(mockedSupplierService.softDelete).toHaveBeenCalledTimes(1);
+      expect(mockedSupplierService.softDelete).toHaveBeenCalledWith(SUPPLIER_ID);
     });
 
     it("awaits the params promise instead of passing it through raw", async () => {
       await PUT(makeRequest(), makeContext("another-id"));
 
-      const [passed_id] = mocked_supplier_service.Soft_Delete.mock.calls[0];
-      expect(passed_id).toBe("another-id");
-      expect(passed_id).not.toBeInstanceOf(Promise);
+      const [passedId] = mockedSupplierService.softDelete.mock.calls[0];
+      expect(passedId).toBe("another-id");
+      expect(passedId).not.toBeInstanceOf(Promise);
     });
 
     it("guards the route with the DELETE_SUPPLIER permission", async () => {
@@ -90,8 +90,8 @@ describe("PUT /api/suppliers/[id]", () => {
 
       await PUT(request, makeContext(SUPPLIER_ID));
 
-      expect(mocked_guard).toHaveBeenCalledTimes(1);
-      expect(mocked_guard).toHaveBeenCalledWith(request, {
+      expect(mockedGuard).toHaveBeenCalledTimes(1);
+      expect(mockedGuard).toHaveBeenCalledWith(request, {
         requirePermission: PERMISSION.DELETE_SUPPLIER,
       });
     });
@@ -99,8 +99,8 @@ describe("PUT /api/suppliers/[id]", () => {
     it("checks authorization before deleting anything", async () => {
       await PUT(makeRequest(), makeContext(SUPPLIER_ID));
 
-      expect(mocked_guard.mock.invocationCallOrder[0]).toBeLessThan(
-        mocked_supplier_service.Soft_Delete.mock.invocationCallOrder[0]
+      expect(mockedGuard.mock.invocationCallOrder[0]).toBeLessThan(
+        mockedSupplierService.softDelete.mock.invocationCallOrder[0]
       );
     });
   });
@@ -111,7 +111,7 @@ describe("PUT /api/suppliers/[id]", () => {
         { success: false, message: "Unauthorized" },
         { status: 401 }
       );
-      mocked_guard.mockReturnValue(denied);
+      mockedGuard.mockReturnValue(denied);
 
       const response = await PUT(makeRequest(), makeContext(SUPPLIER_ID));
 
@@ -120,19 +120,19 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("deletes nothing when the guard blocks the request", async () => {
-      mocked_guard.mockReturnValue(
+      mockedGuard.mockReturnValue(
         NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
       );
 
       await PUT(makeRequest(), makeContext(SUPPLIER_ID));
 
-      expect(mocked_supplier_service.Soft_Delete).not.toHaveBeenCalled();
+      expect(mockedSupplierService.softDelete).not.toHaveBeenCalled();
     });
   });
 
   describe("business rule failures", () => {
     it("returns 404 when the supplier does not exist", async () => {
-      mocked_supplier_service.Soft_Delete.mockRejectedValue(
+      mockedSupplierService.softDelete.mockRejectedValue(
         new ItemNotFoundException("supplier not found")
       );
 
@@ -146,7 +146,7 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("returns 400 when the supplier is already deactivated", async () => {
-      mocked_supplier_service.Soft_Delete.mockRejectedValue(
+      mockedSupplierService.softDelete.mockRejectedValue(
         new BadRequestException("Supplier already deactivated")
       );
 
@@ -159,7 +159,7 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("passes any validation details through to the client", async () => {
-      mocked_supplier_service.Soft_Delete.mockRejectedValue(
+      mockedSupplierService.softDelete.mockRejectedValue(
         new BadRequestException("Invalid id", {
           errors: [{ path: ["id"], message: "must be a uuid" }],
         })
@@ -175,7 +175,7 @@ describe("PUT /api/suppliers/[id]", () => {
 
   describe("authorization failures thrown by the guard", () => {
     it("returns 403 for an unrecognised role", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InvalidRoleException("Invalid role: wizard");
       });
 
@@ -185,11 +185,11 @@ describe("PUT /api/suppliers/[id]", () => {
       expect(response.status).toBe(403);
       expect(json.message).toBe("Invalid user role");
       expect(json.errorType).toBe("InvalidRoleException");
-      expect(mocked_supplier_service.Soft_Delete).not.toHaveBeenCalled();
+      expect(mockedSupplierService.softDelete).not.toHaveBeenCalled();
     });
 
     it("returns 403 when an employee tries to delete a supplier", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InsufficientPermissionsException();
       });
 
@@ -199,11 +199,11 @@ describe("PUT /api/suppliers/[id]", () => {
       expect(response.status).toBe(403);
       expect(json.message).toBe("You do not have permission to delete supplider");
       expect(json.errorType).toBe("InsufficientPermissionsException");
-      expect(mocked_supplier_service.Soft_Delete).not.toHaveBeenCalled();
+      expect(mockedSupplierService.softDelete).not.toHaveBeenCalled();
     });
 
     it("returns 403 with the original message for a generic authorization failure", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthorizationException("Access denied. admin role required.");
       });
 
@@ -216,7 +216,7 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("falls back to a default message when the authorization error has none", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthorizationException("");
       });
 
@@ -228,7 +228,7 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("returns 401 when authentication itself failed", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthenticationException("Token expired");
       });
 
@@ -243,7 +243,7 @@ describe("PUT /api/suppliers/[id]", () => {
 
   describe("server errors", () => {
     it("returns 500 on a database failure without leaking the driver message", async () => {
-      mocked_supplier_service.Soft_Delete.mockRejectedValue(
+      mockedSupplierService.softDelete.mockRejectedValue(
         new DBException("Update failed", new Error("deadlock detected"))
       );
 
@@ -256,7 +256,7 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("returns 500 on an unexpected error", async () => {
-      mocked_supplier_service.Soft_Delete.mockRejectedValue(new Error("boom"));
+      mockedSupplierService.softDelete.mockRejectedValue(new Error("boom"));
 
       const response = await PUT(makeRequest(), makeContext(SUPPLIER_ID));
       const json = await response.json();
@@ -267,7 +267,7 @@ describe("PUT /api/suppliers/[id]", () => {
     });
 
     it("falls back to a default message when the not-found error has none", async () => {
-      mocked_supplier_service.Soft_Delete.mockRejectedValue(new ItemNotFoundException(""));
+      mockedSupplierService.softDelete.mockRejectedValue(new ItemNotFoundException(""));
 
       const response = await PUT(makeRequest(), makeContext("ghost-id"));
       const json = await response.json();

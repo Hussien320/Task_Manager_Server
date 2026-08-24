@@ -1,12 +1,12 @@
 // src/lib/auth/guard.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest } from './request-helper';
-import { ROLE, PERMISSION, hasPermission } from '@/types/roles';
-import { 
-    AuthorizationException, 
+import { getUserFromRequest } from './requestHelper';
+import { ROLE, PERMISSION, hasPermission } from '@/types/Roles';
+import {
+    AuthorizationException,
     InsufficientPermissionsException,
     InvalidRoleException
-} from '@/utils/exceptions/http/AutharizationException';
+} from '@/utils/exceptions/http/AuthorizationException';
 import logger from '@/utils/logger';
 
 /**

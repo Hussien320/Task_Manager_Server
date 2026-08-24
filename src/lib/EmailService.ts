@@ -1,4 +1,4 @@
-// src/lib/email.service.ts
+// src/lib/EmailService.ts
 import nodemailer from 'nodemailer';
 
 interface EmailOptions {

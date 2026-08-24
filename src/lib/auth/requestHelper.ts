@@ -1,6 +1,6 @@
-// src/lib/auth/request-helper.ts
+// src/lib/auth/requestHelper.ts
 import { NextRequest } from 'next/server';
-import { ROLE, toRole } from '@/types/roles';
+import { ROLE, toRole } from '@/types/Roles';
 
 export function getUserIdFromRequest(request: NextRequest): string | null {
     return request.headers.get('x-user-id');
@@ -9,7 +9,7 @@ export function getUserIdFromRequest(request: NextRequest): string | null {
 export function getUserRoleFromRequest(request: NextRequest): ROLE | null {
     const roleHeader = request.headers.get('x-user-role');
     if (!roleHeader) return null;
-    
+
     try {
         return toRole(roleHeader);
     } catch {
@@ -23,8 +23,8 @@ export function getUserFromRequest(request: NextRequest): {
 } | null {
     const userId = getUserIdFromRequest(request);
     const role = getUserRoleFromRequest(request);
-    
+
     if (!userId || !role) return null;
-    
+
     return { userId, role };
 }

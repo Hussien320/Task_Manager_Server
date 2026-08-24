@@ -3,42 +3,42 @@ import prisma from "@/lib/db";
 import { DBException ,ItemExists, ItemNotFoundException} from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
-export class Supplier_repo{
-    private static instance:Supplier_repo;
-    static getinstance():Supplier_repo{
-        if(!Supplier_repo.instance){
-            Supplier_repo.instance=new Supplier_repo();
+export class SupplierRepo{
+    private static instance:SupplierRepo;
+    static getInstance():SupplierRepo{
+        if(!SupplierRepo.instance){
+            SupplierRepo.instance=new SupplierRepo();
         }
-        return Supplier_repo.instance;
+        return SupplierRepo.instance;
     }
-    async Get_All_Suppliers():Promise<Supplier[]>{
+    async getAllSuppliers():Promise<Supplier[]>{
         try{
             const suppliers=await prisma.supplier.findMany({
                 orderBy:[
                     {name:'asc'}
                 ],
-               
+
             })
             return suppliers
-        }   
+        }
         catch(err){
             logger.error('Db coundnot load Suppliers')
             throw new DBException('couldnt load suppliers',err as Error);
-        }  
+        }
     }
-    async Get_Active_Suppliers():Promise<Supplier[]>{
+    async getActiveSuppliers():Promise<Supplier[]>{
         try{
-            const active_supplier=await prisma.supplier.findMany({
+            const activeSuppliers=await prisma.supplier.findMany({
                 where:{
-                    
+
                     is_active:true
                 },
                  orderBy:[
                     {name:'asc'}
                 ],
-            
+
             })
-            return active_supplier;
+            return activeSuppliers;
 
         }
         catch(error){
@@ -47,7 +47,7 @@ export class Supplier_repo{
 
         }
     }
-     async Get_Supplier_By_Id(id: string): Promise<Supplier | null> {
+     async getSupplierById(id: string): Promise<Supplier | null> {
         try {
             const supplier = await prisma.supplier.findUnique({
                 where: { id: id }
@@ -59,11 +59,11 @@ export class Supplier_repo{
         }
     }
 
-    async Create_Supplier(data:{name:string,product_type:ProductType}):Promise<Supplier>{
+    async createSupplier(data:{name:string,product_type:ProductType}):Promise<Supplier>{
         try{
             //check if the supplier exists first
 
-            const exist=await prisma.supplier.findFirst({
+            const existing=await prisma.supplier.findFirst({
                 where:{
                   name:{
                     equals:data.name,
@@ -71,18 +71,18 @@ export class Supplier_repo{
                   }
                 }
             })
-            if(exist){
+            if(existing){
             throw new ItemExists();
             }
-            //create the suuplier
-            const created_Suplier=await prisma.supplier.create({
+            //create the supplier
+            const createdSupplier=await prisma.supplier.create({
                 data:{
                     name:data.name,
                     product_type:data.product_type,
-                   
+
                 }
             })
-            return created_Suplier
+            return createdSupplier
         }
         catch(error){
               if (error instanceof ItemExists) {
@@ -92,11 +92,11 @@ export class Supplier_repo{
             throw new DBException('error occured while creating supplier',error as Error);
         }
     }
-    async Update_Supplier(id:string,data:{name?:string,product_type?:ProductType,is_active?:boolean}):Promise<Supplier>{
+    async updateSupplier(id:string,data:{name?:string,product_type?:ProductType,is_active?:boolean}):Promise<Supplier>{
         try{
             //a rename must not collide with an other supplier (the supplier itself is excluded)
             if(data.name!==undefined){
-                const exist=await prisma.supplier.findFirst({
+                const existing=await prisma.supplier.findFirst({
                     where:{
                         name:{
                             equals:data.name,
@@ -105,12 +105,12 @@ export class Supplier_repo{
                         id:{not:id}
                     }
                 })
-                if(exist){
+                if(existing){
                     throw new ItemExists();
                 }
             }
             //only the provided fields are written, the rest keep their current value
-            const updated_supplier=await prisma.supplier.update({
+            const updatedSupplier=await prisma.supplier.update({
                 where:{id:id},
                 data:{
                     ...(data.name!==undefined && {name:data.name}),
@@ -118,7 +118,7 @@ export class Supplier_repo{
                     ...(data.is_active!==undefined && {is_active:data.is_active}),
                 }
             })
-            return updated_supplier;
+            return updatedSupplier;
         }
         catch(error){
             if(error instanceof ItemExists){
@@ -146,4 +146,4 @@ export class Supplier_repo{
         }
     }
 }
-export const suplier_repo=Supplier_repo.getinstance();
+export const supplierRepo=SupplierRepo.getInstance();

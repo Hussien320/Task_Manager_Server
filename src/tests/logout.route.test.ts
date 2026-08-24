@@ -1,13 +1,13 @@
-// src/tests/auth/logout.route.test.ts
+// src/tests/logout.route.test.ts
 import type { NextRequest } from "next/server";
 
 import { POST } from "@/app/api/auth/logout/route";
-import { auth_service } from "@/services/auth_service";
+import { authService } from "@/services/AuthService";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
-jest.mock("@/services/auth_service", () => ({
-  auth_service: {
-    Logout: jest.fn(),
+jest.mock("@/services/AuthService", () => ({
+  authService: {
+    logout: jest.fn(),
     clearAuthCookies: jest.fn(),
   },
 }));
@@ -21,7 +21,7 @@ jest.mock("@/utils/logger", () => ({
   },
 }));
 
-const mocked_auth_service = auth_service as jest.Mocked<typeof auth_service>;
+const mockedAuthService = authService as jest.Mocked<typeof authService>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /** Minimal NextRequest stand-in: the route only ever reads `x-user-id`. */
@@ -49,14 +49,14 @@ describe("POST /api/auth/logout", () => {
     it("revokes the stored session for the caller", async () => {
       await POST(makeRequest({ "x-user-id": USER_ID }));
 
-      expect(mocked_auth_service.Logout).toHaveBeenCalledWith(USER_ID);
+      expect(mockedAuthService.logout).toHaveBeenCalledWith(USER_ID);
     });
 
     it("clears the auth cookies on the returned response", async () => {
       const response = await POST(makeRequest({ "x-user-id": USER_ID }));
 
-      expect(mocked_auth_service.clearAuthCookies).toHaveBeenCalledTimes(1);
-      expect(mocked_auth_service.clearAuthCookies).toHaveBeenCalledWith(response);
+      expect(mockedAuthService.clearAuthCookies).toHaveBeenCalledTimes(1);
+      expect(mockedAuthService.clearAuthCookies).toHaveBeenCalledWith(response);
     });
   });
 
@@ -72,32 +72,32 @@ describe("POST /api/auth/logout", () => {
     it("does not touch the session when unauthorized", async () => {
       await POST(makeRequest());
 
-      expect(mocked_auth_service.Logout).not.toHaveBeenCalled();
-      expect(mocked_auth_service.clearAuthCookies).not.toHaveBeenCalled();
+      expect(mockedAuthService.logout).not.toHaveBeenCalled();
+      expect(mockedAuthService.clearAuthCookies).not.toHaveBeenCalled();
     });
 
     it("returns 401 when the x-user-id header is empty", async () => {
       const response = await POST(makeRequest({ "x-user-id": "" }));
 
       expect(response.status).toBe(401);
-      expect(mocked_auth_service.Logout).not.toHaveBeenCalled();
+      expect(mockedAuthService.logout).not.toHaveBeenCalled();
     });
   });
 
   describe("server errors", () => {
     it("returns 500 when revoking the session fails", async () => {
-      mocked_auth_service.Logout.mockRejectedValue(new Error("db down"));
+      mockedAuthService.logout.mockRejectedValue(new Error("db down"));
 
       const response = await POST(makeRequest({ "x-user-id": USER_ID }));
       const json = await response.json();
 
       expect(response.status).toBe(500);
       expect(json).toEqual({ success: false, message: "Logout failed" });
-      expect(mocked_auth_service.clearAuthCookies).not.toHaveBeenCalled();
+      expect(mockedAuthService.clearAuthCookies).not.toHaveBeenCalled();
     });
 
     it("returns 500 when clearing the cookies fails", async () => {
-      mocked_auth_service.clearAuthCookies.mockImplementation(() => {
+      mockedAuthService.clearAuthCookies.mockImplementation(() => {
         throw new Error("cookie jar broken");
       });
 

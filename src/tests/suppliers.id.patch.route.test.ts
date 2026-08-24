@@ -1,16 +1,16 @@
-// src/tests/suppliers_update.route.test.ts
+// src/tests/suppliers.id.patch.route.test.ts
 import { NextResponse, type NextRequest } from "next/server";
 
 import { ProductType } from "@/app/generated/prisma/enums";
-import { PATCH } from "@/app/api/suppliers/update/[id]/route";
+import { PATCH } from "@/app/api/suppliers/[id]/route";
 import { authGuard } from "@/lib/auth/guard";
-import { supplier_service } from "@/services/supplier_service";
-import { PERMISSION } from "@/types/roles";
+import { supplierService } from "@/services/SupplierService";
+import { PERMISSION } from "@/types/Roles";
 import {
   AuthorizationException,
   InsufficientPermissionsException,
   InvalidRoleException,
-} from "@/utils/exceptions/http/AutharizationException";
+} from "@/utils/exceptions/http/AuthorizationException";
 import { AuthenticationException } from "@/utils/exceptions/http/AuthenticationException";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptions/RepoException";
@@ -20,9 +20,9 @@ jest.mock("@/lib/auth/guard", () => ({
   authGuard: jest.fn(),
 }));
 
-jest.mock("@/services/supplier_service", () => ({
-  supplier_service: {
-    Update_Supplier: jest.fn(),
+jest.mock("@/services/SupplierService", () => ({
+  supplierService: {
+    updateSupplier: jest.fn(),
   },
 }));
 
@@ -35,8 +35,8 @@ jest.mock("@/utils/logger", () => ({
   },
 }));
 
-const mocked_guard = authGuard as jest.MockedFunction<typeof authGuard>;
-const mocked_supplier_service = supplier_service as jest.Mocked<typeof supplier_service>;
+const mockedGuard = authGuard as jest.MockedFunction<typeof authGuard>;
+const mockedSupplierService = supplierService as jest.Mocked<typeof supplierService>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /** Minimal NextRequest stand-in: the route only ever calls `request.json()`. */
@@ -62,7 +62,7 @@ function makeContext(id: string) {
 const SUPPLIER_ID = "3f2a9c14-6b1e-4a7d-9d55-8c2f0b7e1a34";
 const OTHER_ID = "8b7c6d5e-4f3a-42b1-9c8d-7e6f5a4b3c2d";
 
-const updated_supplier = {
+const updatedSupplier = {
   id: SUPPLIER_ID,
   name: "Fresher Farms",
   product_type: ProductType.PLASTIC,
@@ -71,12 +71,12 @@ const updated_supplier = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mocked_guard.mockReturnValue(null);
-  mocked_supplier_service.Update_Supplier.mockResolvedValue(updated_supplier as never);
+  mockedGuard.mockReturnValue(null);
+  mockedSupplierService.updateSupplier.mockResolvedValue(updatedSupplier as never);
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────────
-describe("PATCH /api/suppliers/update/[id]", () => {
+describe("PATCH /api/suppliers/[id]", () => {
   describe("successful update", () => {
     it("returns 200 with the updated supplier", async () => {
       const response = await PATCH(
@@ -88,14 +88,14 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       expect(response.status).toBe(200);
       expect(json.success).toBe(true);
       expect(json.message).toBe("updated supplier");
-      expect(json.data).toEqual(updated_supplier);
+      expect(json.data).toEqual(updatedSupplier);
     });
 
     it("forwards a name-only patch without inventing the other fields", async () => {
       await PATCH(makeRequest({ name: "Fresher Farms" }), makeContext(SUPPLIER_ID));
 
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledTimes(1);
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledWith(SUPPLIER_ID, {
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledTimes(1);
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledWith(SUPPLIER_ID, {
         name: "Fresher Farms",
         product_type: undefined,
         is_active: undefined,
@@ -108,7 +108,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
         makeContext(SUPPLIER_ID)
       );
 
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledWith(SUPPLIER_ID, {
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledWith(SUPPLIER_ID, {
         name: undefined,
         product_type: ProductType.CLEANING,
         is_active: undefined,
@@ -118,7 +118,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     it("forwards an activity-only patch, including `false`", async () => {
       await PATCH(makeRequest({ is_active: false }), makeContext(SUPPLIER_ID));
 
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledWith(SUPPLIER_ID, {
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledWith(SUPPLIER_ID, {
         name: undefined,
         product_type: undefined,
         is_active: false,
@@ -135,7 +135,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
         makeContext(SUPPLIER_ID)
       );
 
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledWith(SUPPLIER_ID, {
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledWith(SUPPLIER_ID, {
         name: "Fresher Farms",
         product_type: ProductType.PLASTIC,
         is_active: true,
@@ -145,7 +145,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     it("trims the incoming name", async () => {
       await PATCH(makeRequest({ name: "   Fresher Farms   " }), makeContext(SUPPLIER_ID));
 
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledWith(
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledWith(
         SUPPLIER_ID,
         expect.objectContaining({ name: "Fresher Farms" })
       );
@@ -154,9 +154,9 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     it("awaits the params promise instead of passing it through raw", async () => {
       await PATCH(makeRequest({ is_active: true }), makeContext(OTHER_ID));
 
-      const [passed_id] = mocked_supplier_service.Update_Supplier.mock.calls[0];
-      expect(passed_id).toBe(OTHER_ID);
-      expect(passed_id).not.toBeInstanceOf(Promise);
+      const [passedId] = mockedSupplierService.updateSupplier.mock.calls[0];
+      expect(passedId).toBe(OTHER_ID);
+      expect(passedId).not.toBeInstanceOf(Promise);
     });
 
     it("ignores unknown fields in the body", async () => {
@@ -165,7 +165,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
         makeContext(SUPPLIER_ID)
       );
 
-      expect(mocked_supplier_service.Update_Supplier).toHaveBeenCalledWith(
+      expect(mockedSupplierService.updateSupplier).toHaveBeenCalledWith(
         SUPPLIER_ID,
         expect.not.objectContaining({ is_admin: expect.anything() })
       );
@@ -176,8 +176,8 @@ describe("PATCH /api/suppliers/update/[id]", () => {
 
       await PATCH(request, makeContext(SUPPLIER_ID));
 
-      expect(mocked_guard).toHaveBeenCalledTimes(1);
-      expect(mocked_guard).toHaveBeenCalledWith(request, {
+      expect(mockedGuard).toHaveBeenCalledTimes(1);
+      expect(mockedGuard).toHaveBeenCalledWith(request, {
         requirePermission: PERMISSION.UPDATE_SUPPLIER,
       });
     });
@@ -185,8 +185,8 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     it("checks authorization before touching anything", async () => {
       await PATCH(makeRequest({ is_active: true }), makeContext(SUPPLIER_ID));
 
-      expect(mocked_guard.mock.invocationCallOrder[0]).toBeLessThan(
-        mocked_supplier_service.Update_Supplier.mock.invocationCallOrder[0]
+      expect(mockedGuard.mock.invocationCallOrder[0]).toBeLessThan(
+        mockedSupplierService.updateSupplier.mock.invocationCallOrder[0]
       );
     });
   });
@@ -197,7 +197,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
         { success: false, message: "Unauthorized" },
         { status: 401 }
       );
-      mocked_guard.mockReturnValue(denied);
+      mockedGuard.mockReturnValue(denied);
 
       const response = await PATCH(makeRequest({ is_active: true }), makeContext(SUPPLIER_ID));
 
@@ -206,7 +206,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("never reads the body when the guard blocks the request", async () => {
-      mocked_guard.mockReturnValue(
+      mockedGuard.mockReturnValue(
         NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
       );
       const request = makeRequest({ is_active: true });
@@ -214,7 +214,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       await PATCH(request, makeContext(SUPPLIER_ID));
 
       expect(jsonSpy(request)).not.toHaveBeenCalled();
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
   });
 
@@ -230,14 +230,14 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       expect(json.message).toContain("Invalid supplier id");
       expect(json.errors[0].path).toEqual(["id"]);
       expect(jsonSpy(request)).not.toHaveBeenCalled();
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 for an empty id", async () => {
       const response = await PATCH(makeRequest({ is_active: true }), makeContext("   "));
 
       expect(response.status).toBe(400);
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 when the body is not valid JSON", async () => {
@@ -250,7 +250,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       expect(response.status).toBe(400);
       expect(json.success).toBe(false);
       expect(json.message).toContain("request body must be valid JSON");
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 when no editable field is provided", async () => {
@@ -260,7 +260,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       expect(response.status).toBe(400);
       expect(json.success).toBe(false);
       expect(JSON.stringify(json.errors)).toContain("At least one of name");
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 for a name shorter than 2 characters", async () => {
@@ -269,7 +269,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
 
       expect(response.status).toBe(400);
       expect(JSON.stringify(json.errors)).toContain("at least 2 characters");
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 for a name longer than 100 characters", async () => {
@@ -292,7 +292,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
 
       expect(response.status).toBe(400);
       expect(json.success).toBe(false);
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 when is_active is not a boolean", async () => {
@@ -303,20 +303,20 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       const json = await response.json();
 
       expect(response.status).toBe(400);
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 400 when the body is not an object", async () => {
       const response = await PATCH(makeRequest("Fresher Farms"), makeContext(SUPPLIER_ID));
 
       expect(response.status).toBe(400);
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
   });
 
   describe("business rule failures", () => {
     it("returns 404 when the supplier does not exist", async () => {
-      mocked_supplier_service.Update_Supplier.mockRejectedValue(
+      mockedSupplierService.updateSupplier.mockRejectedValue(
         new ItemNotFoundException("supplier not found")
       );
 
@@ -330,7 +330,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("falls back to a default message when the not-found error has none", async () => {
-      mocked_supplier_service.Update_Supplier.mockRejectedValue(new ItemNotFoundException(""));
+      mockedSupplierService.updateSupplier.mockRejectedValue(new ItemNotFoundException(""));
 
       const response = await PATCH(makeRequest({ is_active: true }), makeContext(OTHER_ID));
       const json = await response.json();
@@ -340,7 +340,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("returns 400 when the new name is taken by another supplier", async () => {
-      mocked_supplier_service.Update_Supplier.mockRejectedValue(new ItemExists());
+      mockedSupplierService.updateSupplier.mockRejectedValue(new ItemExists());
 
       const response = await PATCH(
         makeRequest({ name: "Fresh Farms" }),
@@ -355,7 +355,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("returns 400 when the patch would change nothing", async () => {
-      mocked_supplier_service.Update_Supplier.mockRejectedValue(
+      mockedSupplierService.updateSupplier.mockRejectedValue(
         new BadRequestException("No changes to apply, the supplier already has these values")
       );
 
@@ -370,7 +370,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
 
   describe("authorization failures thrown by the guard", () => {
     it("returns 403 for an unrecognised role", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InvalidRoleException("Invalid role: wizard");
       });
 
@@ -380,11 +380,11 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       expect(response.status).toBe(403);
       expect(json.message).toBe("Invalid user role");
       expect(json.errorType).toBe("InvalidRoleException");
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 403 when an employee tries to update a supplier", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InsufficientPermissionsException();
       });
 
@@ -394,11 +394,11 @@ describe("PATCH /api/suppliers/update/[id]", () => {
       expect(response.status).toBe(403);
       expect(json.message).toBe("You do not have permission to update suppliers");
       expect(json.errorType).toBe("InsufficientPermissionsException");
-      expect(mocked_supplier_service.Update_Supplier).not.toHaveBeenCalled();
+      expect(mockedSupplierService.updateSupplier).not.toHaveBeenCalled();
     });
 
     it("returns 403 with the original message for a generic authorization failure", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthorizationException("Access denied. admin role required.");
       });
 
@@ -411,7 +411,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("falls back to a default message when the authorization error has none", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthorizationException("");
       });
 
@@ -423,7 +423,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("returns 401 when authentication itself failed", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthenticationException("Token expired");
       });
 
@@ -438,7 +438,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
 
   describe("server errors", () => {
     it("returns 500 on a database failure without leaking the driver message", async () => {
-      mocked_supplier_service.Update_Supplier.mockRejectedValue(
+      mockedSupplierService.updateSupplier.mockRejectedValue(
         new DBException("error while updating the supplier", new Error("deadlock detected"))
       );
 
@@ -451,7 +451,7 @@ describe("PATCH /api/suppliers/update/[id]", () => {
     });
 
     it("returns 500 on an unexpected error", async () => {
-      mocked_supplier_service.Update_Supplier.mockRejectedValue(new Error("boom"));
+      mockedSupplierService.updateSupplier.mockRejectedValue(new Error("boom"));
 
       const response = await PATCH(makeRequest({ is_active: true }), makeContext(SUPPLIER_ID));
       const json = await response.json();

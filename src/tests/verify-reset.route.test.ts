@@ -1,21 +1,21 @@
-// src/tests/auth/verify-reset.route.test.ts
+// src/tests/verify-reset.route.test.ts
 import type { NextRequest } from "next/server";
 import bcrypt from "bcrypt";
 
 import { POST } from "@/app/api/auth/verify-reset/route";
-import { auth_service } from "@/services/auth_service";
-import { user_serivice } from "@/services/user_service";
+import { authService } from "@/services/AuthService";
+import { userService } from "@/services/UserService";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
-jest.mock("@/services/user_service", () => ({
-  user_serivice: {
-    Update_Pass: jest.fn(),
+jest.mock("@/services/UserService", () => ({
+  userService: {
+    updatePassword: jest.fn(),
   },
 }));
 
-jest.mock("@/services/auth_service", () => ({
-  auth_service: {
-    verResetToken: jest.fn(),
+jest.mock("@/services/AuthService", () => ({
+  authService: {
+    verifyResetToken: jest.fn(),
   },
 }));
 
@@ -34,9 +34,9 @@ jest.mock("@/utils/logger", () => ({
   },
 }));
 
-const mocked_user_service = user_serivice as jest.Mocked<typeof user_serivice>;
-const mocked_auth_service = auth_service as jest.Mocked<typeof auth_service>;
-const mocked_bcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
+const mockedUserService = userService as jest.Mocked<typeof userService>;
+const mockedAuthService = authService as jest.Mocked<typeof authService>;
+const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const HASHED_PASSWORD = "hashed-new-password";
@@ -58,9 +58,9 @@ const validBody = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mocked_auth_service.verResetToken.mockResolvedValue(true);
-  mocked_user_service.Update_Pass.mockResolvedValue(undefined as never);
-  (mocked_bcrypt.hash as jest.Mock).mockResolvedValue(HASHED_PASSWORD);
+  mockedAuthService.verifyResetToken.mockResolvedValue(true);
+  mockedUserService.updatePassword.mockResolvedValue(undefined as never);
+  (mockedBcrypt.hash as jest.Mock).mockResolvedValue(HASHED_PASSWORD);
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ describe("POST /api/auth/verify-reset", () => {
     it("verifies the reset code before touching the password", async () => {
       await POST(makeRequest(validBody));
 
-      expect(mocked_auth_service.verResetToken).toHaveBeenCalledWith(
+      expect(mockedAuthService.verifyResetToken).toHaveBeenCalledWith(
         validBody.email,
         validBody.token
       );
@@ -86,12 +86,12 @@ describe("POST /api/auth/verify-reset", () => {
     it("stores the new password hashed, never in plain text", async () => {
       await POST(makeRequest(validBody));
 
-      expect(mocked_bcrypt.hash).toHaveBeenCalledWith(validBody.password, 10);
-      expect(mocked_user_service.Update_Pass).toHaveBeenCalledWith(
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith(validBody.password, 10);
+      expect(mockedUserService.updatePassword).toHaveBeenCalledWith(
         validBody.email,
         HASHED_PASSWORD
       );
-      expect(mocked_user_service.Update_Pass).not.toHaveBeenCalledWith(
+      expect(mockedUserService.updatePassword).not.toHaveBeenCalledWith(
         validBody.email,
         validBody.password
       );
@@ -105,7 +105,7 @@ describe("POST /api/auth/verify-reset", () => {
 
       expect(response.status).toBe(400);
       expect(json.message).toContain("request body must be valid JSON");
-      expect(mocked_auth_service.verResetToken).not.toHaveBeenCalled();
+      expect(mockedAuthService.verifyResetToken).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -127,14 +127,14 @@ describe("POST /api/auth/verify-reset", () => {
 
       expect(response.status).toBe(400);
       expect(json.message).toContain("Invalid reset credntials");
-      expect(mocked_auth_service.verResetToken).not.toHaveBeenCalled();
-      expect(mocked_user_service.Update_Pass).not.toHaveBeenCalled();
+      expect(mockedAuthService.verifyResetToken).not.toHaveBeenCalled();
+      expect(mockedUserService.updatePassword).not.toHaveBeenCalled();
     });
   });
 
   describe("invalid reset token", () => {
     it("returns 400 when the code does not verify", async () => {
-      mocked_auth_service.verResetToken.mockResolvedValue(false);
+      mockedAuthService.verifyResetToken.mockResolvedValue(false);
 
       const response = await POST(makeRequest(validBody));
       const json = await response.json();
@@ -144,29 +144,29 @@ describe("POST /api/auth/verify-reset", () => {
     });
 
     it("leaves the password untouched when the code does not verify", async () => {
-      mocked_auth_service.verResetToken.mockResolvedValue(false);
+      mockedAuthService.verifyResetToken.mockResolvedValue(false);
 
       await POST(makeRequest(validBody));
 
-      expect(mocked_bcrypt.hash).not.toHaveBeenCalled();
-      expect(mocked_user_service.Update_Pass).not.toHaveBeenCalled();
+      expect(mockedBcrypt.hash).not.toHaveBeenCalled();
+      expect(mockedUserService.updatePassword).not.toHaveBeenCalled();
     });
   });
 
   describe("server errors", () => {
     it("returns 500 when verifying the token throws", async () => {
-      mocked_auth_service.verResetToken.mockRejectedValue(new Error("db down"));
+      mockedAuthService.verifyResetToken.mockRejectedValue(new Error("db down"));
 
       const response = await POST(makeRequest(validBody));
       const json = await response.json();
 
       expect(response.status).toBe(500);
       expect(json.message).toBe("Internal server error");
-      expect(mocked_user_service.Update_Pass).not.toHaveBeenCalled();
+      expect(mockedUserService.updatePassword).not.toHaveBeenCalled();
     });
 
     it("returns 500 when persisting the new password fails", async () => {
-      mocked_user_service.Update_Pass.mockRejectedValue(new Error("write failed"));
+      mockedUserService.updatePassword.mockRejectedValue(new Error("write failed"));
 
       const response = await POST(makeRequest(validBody));
       const json = await response.json();

@@ -4,19 +4,19 @@ import { prisma } from "@/lib/db";
 
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException"
 
-export  class User_Repo{
-    private static instance:User_Repo;
-    static getinstance():User_Repo{
-        if(!User_Repo.instance){
-            User_Repo.instance=new User_Repo();
+export  class UserRepo{
+    private static instance:UserRepo;
+    static getInstance():UserRepo{
+        if(!UserRepo.instance){
+            UserRepo.instance=new UserRepo();
         }
-        return User_Repo.instance;
+        return UserRepo.instance;
     }
-       async GetByEmail(email:string):Promise<User>{
+       async getByEmail(email:string):Promise<User>{
         try{
             const targetUser = await prisma.user.findUnique({
                 where: {
-                    email: email.trim().toLowerCase(),  
+                    email: email.trim().toLowerCase(),
                 }
             });
 
@@ -34,9 +34,9 @@ export  class User_Repo{
         }
 
     }
-    async Update_Loged_User(email:string):Promise<User>{
+    async updateLoggedInUser(email:string):Promise<User>{
         try{
-     const updated_user=       await prisma.user.update({
+     const updatedUser=       await prisma.user.update({
                 where: {
                     email: email.trim().toLowerCase(),
                 },
@@ -45,20 +45,20 @@ export  class User_Repo{
                     is_verified: true,
                 },
             });
-            return updated_user
+            return updatedUser
         }
         catch(err){
-           
+
             throw new DBException("Error updating logged-in user", err as Error);
         }
     }
-    async Update_Refresh_token(user_id:string,token:string | null,expiraydate:Date | null):Promise<void>{
+    async updateRefreshToken(userId:string,token:string | null,expiryDate:Date | null):Promise<void>{
         try{
             await prisma.user.update({
-                where: { id: user_id },
+                where: { id: userId },
                 data: {
                     refresh_token: token,
-                    refresh_token_expires_at: expiraydate
+                    refresh_token_expires_at: expiryDate
                     ,
                 },
             });
@@ -69,13 +69,13 @@ export  class User_Repo{
 
         }
     }
-    async Update_Reset_token(user_id:string,token:string | null,expiraydate:Date | null):Promise<void>{
+    async updateResetToken(userId:string,token:string | null,expiryDate:Date | null):Promise<void>{
         try{
             await  prisma.user.update({
-                where:{id:user_id},
+                where:{id:userId},
                 data:{
                       reset_password_token :token,
-                        reset_password_expiresAt:expiraydate
+                        reset_password_expiresAt:expiryDate
                 }
 
             });
@@ -85,11 +85,11 @@ export  class User_Repo{
 
         }
         }
-    async Get_User(user_id:string):Promise<User>{
+    async getUser(userId:string):Promise<User>{
      try{
         const target=await prisma.user.findUnique({
             where:{
-                id:user_id
+                id:userId
             }
         })
         if(!target){
@@ -102,10 +102,10 @@ export  class User_Repo{
         }
         throw new DBException('Failed in getting user',err as Error);
 
-     } 
-   
+     }
+
     }
-     async Update_User_Pass(email:string,pass:string):Promise<void>{
+     async updateUserPassword(email:string,pass:string):Promise<void>{
         try{
         await prisma.user.update({
             where:{
@@ -123,20 +123,20 @@ export  class User_Repo{
         }
 
      }
- async Update_Not_Verfied_User(user_id:string){
+ async updateNotVerifiedUser(userId:string){
 
         await prisma.user.update({
             where:{
-                id:user_id
+                id:userId
             },
             data:{
                 is_verified:false,
                 refresh_token:null,
                 refresh_token_expires_at:null
             }
-        })    
-        }    
+        })
+        }
 
 
 }
-export const user_repo=User_Repo.getinstance();
+export const userRepo=UserRepo.getInstance();

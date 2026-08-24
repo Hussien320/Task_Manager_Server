@@ -1,24 +1,24 @@
-// src/tests/auth/login.route.test.ts
+// src/tests/login.route.test.ts
 import type { NextRequest } from "next/server";
 
 import { POST } from "@/app/api/auth/login/route";
-import { user_serivice } from "@/services/user_service";
-import { auth_service } from "@/services/auth_service";
+import { userService } from "@/services/UserService";
+import { authService } from "@/services/AuthService";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
-import { ROLE } from "@/types/roles";
+import { ROLE } from "@/types/Roles";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
-jest.mock("@/services/user_service", () => ({
-  user_serivice: {
-    ValidateUser: jest.fn(),
-    Update_VerfiedUser: jest.fn(),
+jest.mock("@/services/UserService", () => ({
+  userService: {
+    validateUser: jest.fn(),
+    updateVerifiedUser: jest.fn(),
   },
 }));
 
-jest.mock("@/services/auth_service", () => ({
-  auth_service: {
-    persist_auth: jest.fn(),
+jest.mock("@/services/AuthService", () => ({
+  authService: {
+    persistAuth: jest.fn(),
   },
 }));
 
@@ -31,13 +31,13 @@ jest.mock("@/utils/logger", () => ({
   },
 }));
 
-const mocked_user_service = user_serivice as jest.Mocked<typeof user_serivice>;
-const mocked_auth_service = auth_service as jest.Mocked<typeof auth_service>;
+const mockedUserService = userService as jest.Mocked<typeof userService>;
+const mockedAuthService = authService as jest.Mocked<typeof authService>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const CREATED_AT = new Date("2026-01-01T00:00:00.000Z");
 
-const fake_user = {
+const fakeUser = {
   id: "user-1",
   username: "hussien",
   email: "hussien@example.com",
@@ -47,7 +47,7 @@ const fake_user = {
   created_at: CREATED_AT,
 };
 
-const logged_user = { ...fake_user, is_verified: true };
+const loggedUser = { ...fakeUser, is_verified: true };
 
 /** Minimal NextRequest stand-in: the route only ever calls `request.json()`. */
 function makeRequest(body: unknown, { invalidJson = false } = {}): NextRequest {
@@ -71,9 +71,9 @@ beforeEach(() => {
 describe("POST /api/auth/login", () => {
   describe("successful login", () => {
     beforeEach(() => {
-      mocked_user_service.ValidateUser.mockResolvedValue(fake_user as never);
-      mocked_user_service.Update_VerfiedUser.mockResolvedValue(logged_user as never);
-      mocked_auth_service.persist_auth.mockResolvedValue(undefined as never);
+      mockedUserService.validateUser.mockResolvedValue(fakeUser as never);
+      mockedUserService.updateVerifiedUser.mockResolvedValue(loggedUser as never);
+      mockedAuthService.persistAuth.mockResolvedValue(undefined as never);
     });
 
     it("returns 200 with the login payload", async () => {
@@ -84,10 +84,10 @@ describe("POST /api/auth/login", () => {
       expect(json.success).toBe(true);
       expect(json.message).toBe("Login successful");
       expect(json.data).toEqual({
-        id: logged_user.id,
-        username: logged_user.username,
-        email: logged_user.email,
-        role: logged_user.role,
+        id: loggedUser.id,
+        username: loggedUser.username,
+        email: loggedUser.email,
+        role: loggedUser.role,
         is_verified: true,
         created_at: CREATED_AT.toISOString(),
       });
@@ -103,20 +103,20 @@ describe("POST /api/auth/login", () => {
     it("validates the credentials then marks the user as logged in", async () => {
       await POST(makeRequest(validCredentials));
 
-      expect(mocked_user_service.ValidateUser).toHaveBeenCalledWith(
+      expect(mockedUserService.validateUser).toHaveBeenCalledWith(
         validCredentials.email,
         validCredentials.password
       );
-      expect(mocked_user_service.Update_VerfiedUser).toHaveBeenCalledWith(fake_user.email);
+      expect(mockedUserService.updateVerifiedUser).toHaveBeenCalledWith(fakeUser.email);
     });
 
     it("persists auth cookies/tokens for the validated user", async () => {
       const response = await POST(makeRequest(validCredentials));
 
-      expect(mocked_auth_service.persist_auth).toHaveBeenCalledTimes(1);
-      const [passedResponse, payload] = mocked_auth_service.persist_auth.mock.calls[0];
+      expect(mockedAuthService.persistAuth).toHaveBeenCalledTimes(1);
+      const [passedResponse, payload] = mockedAuthService.persistAuth.mock.calls[0];
       expect(passedResponse).toBe(response);
-      expect(payload).toEqual({ user_id: fake_user.id, user_role: ROLE.ADMIN });
+      expect(payload).toEqual({ userId: fakeUser.id, userRole: ROLE.ADMIN });
     });
   });
 
@@ -128,7 +128,7 @@ describe("POST /api/auth/login", () => {
       expect(response.status).toBe(400);
       expect(json.success).toBe(false);
       expect(json.message).toContain("request body must be valid JSON");
-      expect(mocked_user_service.ValidateUser).not.toHaveBeenCalled();
+      expect(mockedUserService.validateUser).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -146,7 +146,7 @@ describe("POST /api/auth/login", () => {
       expect(json.message).toContain("Invalid login credntials");
       expect(Array.isArray(json.errors)).toBe(true);
       expect(json.errors.length).toBeGreaterThan(0);
-      expect(mocked_user_service.ValidateUser).not.toHaveBeenCalled();
+      expect(mockedUserService.validateUser).not.toHaveBeenCalled();
     });
 
     it("reports the offending field in the validation errors", async () => {
@@ -163,7 +163,7 @@ describe("POST /api/auth/login", () => {
 
   describe("failed authentication", () => {
     it("returns 404 when the user does not exist", async () => {
-      mocked_user_service.ValidateUser.mockRejectedValue(
+      mockedUserService.validateUser.mockRejectedValue(
         new ItemNotFoundException("User not found")
       );
 
@@ -172,11 +172,11 @@ describe("POST /api/auth/login", () => {
 
       expect(response.status).toBe(404);
       expect(json.message).toContain("User not found");
-      expect(mocked_auth_service.persist_auth).not.toHaveBeenCalled();
+      expect(mockedAuthService.persistAuth).not.toHaveBeenCalled();
     });
 
     it("returns 400 when the password does not match", async () => {
-      mocked_user_service.ValidateUser.mockRejectedValue(
+      mockedUserService.validateUser.mockRejectedValue(
         new BadRequestException("Bad request: invalid email or password")
       );
 
@@ -186,14 +186,14 @@ describe("POST /api/auth/login", () => {
       expect(response.status).toBe(400);
       expect(json.success).toBe(false);
       expect(json.message).toContain("invalid email or password");
-      expect(mocked_user_service.Update_VerfiedUser).not.toHaveBeenCalled();
-      expect(mocked_auth_service.persist_auth).not.toHaveBeenCalled();
+      expect(mockedUserService.updateVerifiedUser).not.toHaveBeenCalled();
+      expect(mockedAuthService.persistAuth).not.toHaveBeenCalled();
     });
   });
 
   describe("server errors", () => {
     it("returns 500 on a database failure", async () => {
-      mocked_user_service.ValidateUser.mockRejectedValue(
+      mockedUserService.validateUser.mockRejectedValue(
         new DBException("Query failed", new Error("connection refused"))
       );
 
@@ -205,7 +205,7 @@ describe("POST /api/auth/login", () => {
     });
 
     it("returns 500 on an unexpected error", async () => {
-      mocked_user_service.ValidateUser.mockRejectedValue(new Error("boom"));
+      mockedUserService.validateUser.mockRejectedValue(new Error("boom"));
 
       const response = await POST(makeRequest(validCredentials));
       const json = await response.json();
@@ -215,9 +215,9 @@ describe("POST /api/auth/login", () => {
     });
 
     it("returns 500 when persisting the auth tokens fails", async () => {
-      mocked_user_service.ValidateUser.mockResolvedValue(fake_user as never);
-      mocked_user_service.Update_VerfiedUser.mockResolvedValue(logged_user as never);
-      mocked_auth_service.persist_auth.mockRejectedValue(new Error("jwt signing failed"));
+      mockedUserService.validateUser.mockResolvedValue(fakeUser as never);
+      mockedUserService.updateVerifiedUser.mockResolvedValue(loggedUser as never);
+      mockedAuthService.persistAuth.mockRejectedValue(new Error("jwt signing failed"));
 
       const response = await POST(makeRequest(validCredentials));
       const json = await response.json();

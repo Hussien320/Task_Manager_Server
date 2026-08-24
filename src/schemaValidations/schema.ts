@@ -16,7 +16,7 @@ export const loginSchema = z.object({
     .max(100, { message: "Password is too long" }),
 });
 
-export const ForgotPassSchema=z.object({
+export const forgotPasswordSchema=z.object({
   email:z
     .string()
     .trim()
@@ -24,7 +24,7 @@ export const ForgotPassSchema=z.object({
     .email({ message: "Invalid email format" })
     .max(255, { message: "Email is too long" })
 })
-export const ResetPassSchema=z.object({
+export const resetPasswordSchema=z.object({
     email: z
     .string()
     .trim()
@@ -40,7 +40,7 @@ export const ResetPassSchema=z.object({
     token:z.
     string()
 })
-export const CreatSupplierSchema=z.object({
+export const createSupplierSchema=z.object({
   name:  z
         .string()
         .trim()
@@ -51,7 +51,7 @@ export const CreatSupplierSchema=z.object({
     })
 
 /** Route param `[id]` — every supplier id is a uuid (`schema.prisma`: `@default(uuid())`). */
-export const SupplierIdSchema = z
+export const supplierIdSchema = z
   .string()
   .trim()
   .min(1, { message: "Supplier id is required" })
@@ -61,7 +61,7 @@ export const SupplierIdSchema = z
  * Partial update: the manager may send any subset of the three editable fields,
  * but sending none of them is a bad request rather than a silent no-op.
  */
-export const UpdateSupplierSchema = z
+export const updateSupplierSchema = z
   .object({
     name: z
       .string()

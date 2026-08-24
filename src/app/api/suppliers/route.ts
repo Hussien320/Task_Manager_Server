@@ -1,25 +1,23 @@
+import { ProductType } from "@/app/generated/prisma/enums";
 import { authGuard } from "@/lib/auth/guard";
+import { createSupplierSchema } from "@/schemaValidations/schema";
+import { supplierService } from "@/services/SupplierService";
+import { PERMISSION } from "@/types/Roles";
 
-import { supplier_service } from "@/services/supplier_service";
-import { PERMISSION } from "@/types/roles";
-
-import { AuthorizationException, InsufficientPermissionsException, InvalidRoleException } from "@/utils/exceptions/http/AutharizationException";
-import { AuthenticationException } from "@/utils/exceptions/http/AuthenticationException";
-
-import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
-import logger from "@/utils/logger";
+import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
+import { handleRouteError } from "@/utils/handleRouteError";
 import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET(request:NextRequest){
     try{
         //check if the user has permision to list the suppliers
-        const autherror=authGuard(request,{
+        const authError=authGuard(request,{
             requirePermission:PERMISSION.READ_ALL_SUPPLIERS
         });
-        if(autherror) return autherror;
+        if(authError) return authError;
         //get all suppliers
-        const suppliers=await supplier_service.Get_All_Suppliers();
+        const suppliers=await supplierService.getAllSuppliers();
 
         return NextResponse.json({
             success:true,
@@ -30,101 +28,48 @@ export async function GET(request:NextRequest){
         })
     }
     catch(error){
-        // ✅ Invalid role (role doesn't exist in system)
-        if (error instanceof InvalidRoleException) {
-            logger.error(`Invalid role: ${error.message}`);
-            return NextResponse.json(
-                { 
-                    success: false, 
-                    message: 'Invalid user role',
-                    errorType: 'InvalidRoleException'
-                },
-                { status: 403 }
-            );
-        }
-
-        // ✅ Insufficient permissions (valid role but missing permission)
-        if (error instanceof InsufficientPermissionsException) {
-            logger.warn(`Permission denied: ${error.message}`);
-            return NextResponse.json(
-                { 
-                    success: false, 
-                    message: 'You do not have permission to view suppliers',
-                    errorType: 'InsufficientPermissionsException'
-                },
-                { status: 403 }
-            );
-        }
-
-        // ✅ Authorization error (wrong role for route)
-        if (error instanceof AuthorizationException) {
-            logger.warn(`Authorization failed: ${error.message}`);
-            return NextResponse.json(
-                { 
-                    success: false, 
-                    message: error.message || 'Authorization failed',
-                    errorType: 'AuthorizationException'
-                },
-                { status: 403 }
-            );
-        }
-
-        // ✅ Authentication error (token invalid/expired)
-        if (error instanceof AuthenticationException) {
-            logger.warn(`Authentication failed: ${error.message}`);
-            return NextResponse.json(
-                { 
-                    success: false, 
-                    message: 'Authentication failed. Please login again.',
-                    errorType: 'AuthenticationException'
-                },
-                { status: 401 }
-            );
-        }
-
-        // ============================================
-        // HANDLE REPOSITORY EXCEPTIONS
-        // ============================================
-
-        // ✅ Item not found
-        if (error instanceof ItemNotFoundException) {
-            logger.warn(`Item not found: ${error.message}`);
-            return NextResponse.json(
-                { 
-                    success: false, 
-                    message: error.message || 'Resource not found',
-                    errorType: 'ItemNotFoundException'
-                },
-                { status: 404 }
-            );
-        }
-
-        // ✅ Database error
-        if (error instanceof DBException) {
-            logger.error(`Database error: ${error.message}`);
-            return NextResponse.json(
-                { 
-                    success: false, 
-                    message: 'Database error while fetching suppliers',
-                    errorType: 'DBException'
-                },
-                { status: 500 }
-            );
-        }
-
-        // ============================================
-        // HANDLE UNKNOWN ERRORS
-        // ============================================
-
-        logger.error('Unexpected error in GET /api/suppliers:', error);
-        return NextResponse.json(
-            { 
-                success: false, 
-                message: 'Internal server error',
-                errorType: 'UnknownError'
-            },
-            { status: 500 }
-        );
+        return handleRouteError(error, {
+            operation: 'GET /api/suppliers',
+            permissionMessage: 'You do not have permission to view suppliers'
+        });
     }
 }
 
+export async function POST(req:NextRequest){
+    let body;
+    try{
+    //check if th user has permision to add a supplier
+    const authError=authGuard(req,{requirePermission:PERMISSION.CREATE_SUPPLIER});
+    if(authError) return authError;
+    try {
+          body = await req.json();
+        } catch {
+          throw new BadRequestException("Bad request: request body must be valid JSON");
+        }
+        const parse=createSupplierSchema.safeParse(body);
+         if (!parse.success) {
+      throw new BadRequestException("Invalid create supplier credntials", {
+        errors: parse.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
+      });
+    }
+        const {data}=parse;
+        const mappedResult=await supplierService.createSupplier({name:data.name,product_type:data.product_type as ProductType});
+        return NextResponse.json({
+            success:true,
+            message:'created supplier',
+            data:mappedResult
+        },
+        {status:201}
+    )
+    }
+    catch(error){
+        return handleRouteError(error, {
+            operation: 'addition',
+            permissionMessage: 'You do not have permission to add suppliers',
+            itemExistsMessage: 'supplier already created'
+        });
+    }
+}

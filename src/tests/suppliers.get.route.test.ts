@@ -1,15 +1,15 @@
-// src/tests/suppliers.route.test.ts
+// src/tests/suppliers.get.route.test.ts
 import { NextResponse, type NextRequest } from "next/server";
 
 import { GET } from "@/app/api/suppliers/route";
 import { authGuard } from "@/lib/auth/guard";
-import { supplier_service } from "@/services/supplier_service";
-import { PERMISSION } from "@/types/roles";
+import { supplierService } from "@/services/SupplierService";
+import { PERMISSION } from "@/types/Roles";
 import {
   AuthorizationException,
   InsufficientPermissionsException,
   InvalidRoleException,
-} from "@/utils/exceptions/http/AutharizationException";
+} from "@/utils/exceptions/http/AuthorizationException";
 import { AuthenticationException } from "@/utils/exceptions/http/AuthenticationException";
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 
@@ -18,9 +18,9 @@ jest.mock("@/lib/auth/guard", () => ({
   authGuard: jest.fn(),
 }));
 
-jest.mock("@/services/supplier_service", () => ({
-  supplier_service: {
-    Get_All_Suppliers: jest.fn(),
+jest.mock("@/services/SupplierService", () => ({
+  supplierService: {
+    getAllSuppliers: jest.fn(),
   },
 }));
 
@@ -33,8 +33,8 @@ jest.mock("@/utils/logger", () => ({
   },
 }));
 
-const mocked_guard = authGuard as jest.MockedFunction<typeof authGuard>;
-const mocked_supplier_service = supplier_service as jest.Mocked<typeof supplier_service>;
+const mockedGuard = authGuard as jest.MockedFunction<typeof authGuard>;
+const mockedSupplierService = supplierService as jest.Mocked<typeof supplierService>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /** The route never reads the request — `authGuard` is mocked, so an empty object suffices. */
@@ -42,27 +42,27 @@ function makeRequest(): NextRequest {
   return {} as unknown as NextRequest;
 }
 
-const supplier_a = {
+const supplierA = {
   id: "sup-1",
   name: "Fresh Farms",
   product_type: "VEGTABLE",
   is_active: true,
 };
 
-const supplier_b = {
+const supplierB = {
   id: "sup-2",
   name: "PlastiCo",
   product_type: "PLASTIC",
   is_active: false,
 };
 
-const supplier_list = { suppliers: [supplier_a, supplier_b], total: 2 };
+const supplierList = { suppliers: [supplierA, supplierB], total: 2 };
 
 beforeEach(() => {
   jest.clearAllMocks();
   // Happy path by default: the guard lets the request through and the service returns a list.
-  mocked_guard.mockReturnValue(null);
-  mocked_supplier_service.Get_All_Suppliers.mockResolvedValue(supplier_list as never);
+  mockedGuard.mockReturnValue(null);
+  mockedSupplierService.getAllSuppliers.mockResolvedValue(supplierList as never);
 });
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -74,12 +74,12 @@ describe("GET /api/suppliers", () => {
 
       expect(response.status).toBe(200);
       expect(json.success).toBe(true);
-      expect(json.data).toEqual(supplier_list);
+      expect(json.data).toEqual(supplierList);
       expect(json.meta).toEqual({ total: 2 });
     });
 
     it("returns an empty list rather than an error when there are no suppliers", async () => {
-      mocked_supplier_service.Get_All_Suppliers.mockResolvedValue({
+      mockedSupplierService.getAllSuppliers.mockResolvedValue({
         suppliers: [],
         total: 0,
       } as never);
@@ -97,8 +97,8 @@ describe("GET /api/suppliers", () => {
 
       await GET(request);
 
-      expect(mocked_guard).toHaveBeenCalledTimes(1);
-      expect(mocked_guard).toHaveBeenCalledWith(request, {
+      expect(mockedGuard).toHaveBeenCalledTimes(1);
+      expect(mockedGuard).toHaveBeenCalledWith(request, {
         requirePermission: PERMISSION.READ_ALL_SUPPLIERS,
       });
     });
@@ -106,11 +106,11 @@ describe("GET /api/suppliers", () => {
     it("checks authorization before touching the service", async () => {
       await GET(makeRequest());
 
-      const guard_order = mocked_guard.mock.invocationCallOrder[0];
-      const service_order =
-        mocked_supplier_service.Get_All_Suppliers.mock.invocationCallOrder[0];
+      const guardOrder = mockedGuard.mock.invocationCallOrder[0];
+      const serviceOrder =
+        mockedSupplierService.getAllSuppliers.mock.invocationCallOrder[0];
 
-      expect(guard_order).toBeLessThan(service_order);
+      expect(guardOrder).toBeLessThan(serviceOrder);
     });
   });
 
@@ -120,7 +120,7 @@ describe("GET /api/suppliers", () => {
         { success: false, message: "Unauthorized" },
         { status: 401 }
       );
-      mocked_guard.mockReturnValue(denied);
+      mockedGuard.mockReturnValue(denied);
 
       const response = await GET(makeRequest());
 
@@ -130,19 +130,19 @@ describe("GET /api/suppliers", () => {
     });
 
     it("never queries suppliers when the guard blocks the request", async () => {
-      mocked_guard.mockReturnValue(
+      mockedGuard.mockReturnValue(
         NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
       );
 
       await GET(makeRequest());
 
-      expect(mocked_supplier_service.Get_All_Suppliers).not.toHaveBeenCalled();
+      expect(mockedSupplierService.getAllSuppliers).not.toHaveBeenCalled();
     });
   });
 
   describe("authorization failures thrown by the guard", () => {
     it("returns 403 for an unrecognised role", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InvalidRoleException("Invalid role: wizard");
       });
 
@@ -153,11 +153,11 @@ describe("GET /api/suppliers", () => {
       expect(json.success).toBe(false);
       expect(json.message).toBe("Invalid user role");
       expect(json.errorType).toBe("InvalidRoleException");
-      expect(mocked_supplier_service.Get_All_Suppliers).not.toHaveBeenCalled();
+      expect(mockedSupplierService.getAllSuppliers).not.toHaveBeenCalled();
     });
 
     it("returns 403 when the role is valid but lacks the permission", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InsufficientPermissionsException();
       });
 
@@ -167,11 +167,11 @@ describe("GET /api/suppliers", () => {
       expect(response.status).toBe(403);
       expect(json.message).toBe("You do not have permission to view suppliers");
       expect(json.errorType).toBe("InsufficientPermissionsException");
-      expect(mocked_supplier_service.Get_All_Suppliers).not.toHaveBeenCalled();
+      expect(mockedSupplierService.getAllSuppliers).not.toHaveBeenCalled();
     });
 
     it("returns 403 with the original message for a generic authorization failure", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthorizationException("Access denied. admin role required.");
       });
 
@@ -184,7 +184,7 @@ describe("GET /api/suppliers", () => {
     });
 
     it("falls back to a default message when the authorization error has none", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthorizationException("");
       });
 
@@ -196,7 +196,7 @@ describe("GET /api/suppliers", () => {
     });
 
     it("returns 401 when authentication itself failed", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new AuthenticationException("Token expired");
       });
 
@@ -215,7 +215,7 @@ describe("GET /api/suppliers", () => {
      * make every 403 collapse into the generic branch — this test catches that.
      */
     it("reports the most specific authorization error, not the base class", async () => {
-      mocked_guard.mockImplementation(() => {
+      mockedGuard.mockImplementation(() => {
         throw new InsufficientPermissionsException();
       });
 
@@ -228,7 +228,7 @@ describe("GET /api/suppliers", () => {
 
   describe("server errors", () => {
     it("returns 404 when the service reports nothing found", async () => {
-      mocked_supplier_service.Get_All_Suppliers.mockRejectedValue(
+      mockedSupplierService.getAllSuppliers.mockRejectedValue(
         new ItemNotFoundException("No suppliers exist")
       );
 
@@ -241,7 +241,7 @@ describe("GET /api/suppliers", () => {
     });
 
     it("falls back to a default message when the not-found error has none", async () => {
-      mocked_supplier_service.Get_All_Suppliers.mockRejectedValue(
+      mockedSupplierService.getAllSuppliers.mockRejectedValue(
         new ItemNotFoundException("")
       );
 
@@ -253,7 +253,7 @@ describe("GET /api/suppliers", () => {
     });
 
     it("returns 500 on a database failure without leaking the driver message", async () => {
-      mocked_supplier_service.Get_All_Suppliers.mockRejectedValue(
+      mockedSupplierService.getAllSuppliers.mockRejectedValue(
         new DBException("Query failed", new Error("connection refused"))
       );
 
@@ -261,13 +261,13 @@ describe("GET /api/suppliers", () => {
       const json = await response.json();
 
       expect(response.status).toBe(500);
-      expect(json.message).toBe("Database error while fetching suppliers");
+      expect(json.message).toBe("Database error while processing GET /api/suppliers");
       expect(json.errorType).toBe("DBException");
       expect(JSON.stringify(json)).not.toContain("connection refused");
     });
 
     it("returns 500 on an unexpected error", async () => {
-      mocked_supplier_service.Get_All_Suppliers.mockRejectedValue(new Error("boom"));
+      mockedSupplierService.getAllSuppliers.mockRejectedValue(new Error("boom"));
 
       const response = await GET(makeRequest());
       const json = await response.json();

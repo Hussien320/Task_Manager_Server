@@ -1,4 +1,4 @@
-// src/types/roles.ts
+// src/types/Roles.ts
 
 // ============================================
 // ROLES
