@@ -1,6 +1,6 @@
 import {ProductType, Supplier } from "@/app/generated/prisma/client";
 import prisma from "@/lib/db";
-import { DBException ,ItemExists} from "@/utils/exceptions/RepoException";
+import { DBException ,ItemExists, ItemNotFoundException} from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
 export class Supplier_repo{
@@ -90,6 +90,47 @@ export class Supplier_repo{
         }
             logger.error('error occured while creating supplier',error as Error);
             throw new DBException('error occured while creating supplier',error as Error);
+        }
+    }
+    async Update_Supplier(id:string,data:{name?:string,product_type?:ProductType,is_active?:boolean}):Promise<Supplier>{
+        try{
+            //a rename must not collide with an other supplier (the supplier itself is excluded)
+            if(data.name!==undefined){
+                const exist=await prisma.supplier.findFirst({
+                    where:{
+                        name:{
+                            equals:data.name,
+                            mode:'insensitive'
+                        },
+                        id:{not:id}
+                    }
+                })
+                if(exist){
+                    throw new ItemExists();
+                }
+            }
+            //only the provided fields are written, the rest keep their current value
+            const updated_supplier=await prisma.supplier.update({
+                where:{id:id},
+                data:{
+                    ...(data.name!==undefined && {name:data.name}),
+                    ...(data.product_type!==undefined && {product_type:data.product_type}),
+                    ...(data.is_active!==undefined && {is_active:data.is_active}),
+                }
+            })
+            return updated_supplier;
+        }
+        catch(error){
+            if(error instanceof ItemExists){
+                throw error; // Re-throw duplicate error
+            }
+            //P2025: the row disappeared between the service read and this write
+            if((error as {code?:string}).code==='P2025'){
+                logger.warn(`supplier ${id} not found while updating`);
+                throw new ItemNotFoundException('supplier not found');
+            }
+            logger.error('error while updating the supplier',error as Error);
+            throw new DBException('error while updating the supplier',error as Error);
         }
     }
     async softDelete(id:string):Promise<void>{
