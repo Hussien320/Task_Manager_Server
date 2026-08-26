@@ -1,3 +1,4 @@
+// prisma/seed.ts
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/app/generated/prisma/client";
@@ -11,16 +12,17 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  // Clean existing data
   await prisma.inventoryLog.deleteMany();
   await prisma.appSetting.deleteMany();
   await prisma.product.deleteMany();
   await prisma.supplier.deleteMany();
   await prisma.user.deleteMany();
 
+  // Create users
   const adminPassword = await bcrypt.hash("password123", 10);
   const employeePassword = await bcrypt.hash("password123", 10);
- 
-  
+
   const adminUser = await prisma.user.create({
     data: {
       username: "hussien",
@@ -40,10 +42,10 @@ async function main() {
       role: UserRole.EMPLOYEE,
       is_verified: false,
       last_login: new Date(),
-   
     },
   });
 
+  // Create suppliers
   const supplierOne = await prisma.supplier.create({
     data: {
       name: "Fresh Farm Co.",
@@ -68,7 +70,9 @@ async function main() {
     },
   });
 
+  // Create products with thresholds
   const products = await prisma.$transaction([
+    // ✅ VEGTABLE products (threshold: 10)
     prisma.product.create({
       data: {
         supplier_id: supplierOne.id,
@@ -77,7 +81,7 @@ async function main() {
         quantity: 24,
         price: 3.5,
         expiry_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        low_stock_threshold: 5,
+        low_stock_threshold: 10, // ← Default for VEGTABLE
       },
     }),
     prisma.product.create({
@@ -88,9 +92,10 @@ async function main() {
         quantity: 8,
         price: 2.2,
         expiry_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        low_stock_threshold: 3,
+        low_stock_threshold: 10, // ← Default for VEGTABLE
       },
     }),
+    // ✅ PLASTIC products (threshold: 20)
     prisma.product.create({
       data: {
         supplier_id: supplierTwo.id,
@@ -98,9 +103,20 @@ async function main() {
         category: ProductType.PLASTIC,
         quantity: 15,
         price: 6.75,
-        low_stock_threshold: 4,
+        low_stock_threshold: 20, // ← Default for PLASTIC
       },
     }),
+    prisma.product.create({
+      data: {
+        supplier_id: supplierTwo.id,
+        name: "Plastic Bags",
+        category: ProductType.PLASTIC,
+        quantity: 30,
+        price: 2.5,
+        low_stock_threshold: 20, // ← Default for PLASTIC
+      },
+    }),
+    // ✅ CLEANING products (threshold: 5)
     prisma.product.create({
       data: {
         supplier_id: supplierThree.id,
@@ -108,11 +124,22 @@ async function main() {
         category: ProductType.CLEANING,
         quantity: 6,
         price: 9.9,
-        low_stock_threshold: 2,
+        low_stock_threshold: 5, // ← Default for CLEANING
+      },
+    }),
+    prisma.product.create({
+      data: {
+        supplier_id: supplierThree.id,
+        name: "Glass Cleaner",
+        category: ProductType.CLEANING,
+        quantity: 3,
+        price: 7.5,
+        low_stock_threshold: 5, // ← Default for CLEANING
       },
     }),
   ]);
 
+  // Create inventory logs
   await prisma.inventoryLog.createMany({
     data: [
       {
@@ -131,7 +158,7 @@ async function main() {
       },
       {
         user_id: adminUser.id,
-        product_id: products[3].id,
+        product_id: products[4].id,
         transaction_type: TransactionType.ADDITION,
         quantity_changed: 4,
         unit_price_at_time: 9.9,
@@ -139,20 +166,38 @@ async function main() {
     ],
   });
 
+  // ✅ Create AppSettings for thresholds
   await prisma.appSetting.createMany({
     data: [
       {
         updated_by: adminUser.id,
-        setting_key: "low_stock_threshold_test",
+        setting_key: "threshold_PLASTIC",
+        setting_value: "20",
+      },
+      {
+        updated_by: adminUser.id,
+        setting_key: "threshold_CLEANING",
         setting_value: "5",
       },
       {
         updated_by: adminUser.id,
-        setting_key: "expiry_date",
-        setting_value: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        setting_key: "threshold_VEGTABLE",
+        setting_value: "10",
+      },
+      {
+        updated_by: adminUser.id,
+        setting_key: "expiry_warning_days",
+        setting_value: "7",
       },
     ],
   });
+
+  console.log("✅ Seed data created successfully!");
+  console.log("📊 Summary:");
+  console.log(`   - ${products.length} products created`);
+  console.log(`   - 2 users created (ADMIN + EMPLOYEE)`);
+  console.log(`   - 3 suppliers created`);
+  console.log(`   - 4 app settings created`);
 }
 
 main()

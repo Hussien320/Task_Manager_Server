@@ -84,3 +84,37 @@ export const updateSupplierSchema = z
         "At least one of name, product_type or is_active must be provided",
     }
   );
+  export const addProductSchema=z.object({
+  name:z.string()
+      .trim()
+      .min(2, { message: "product name must be at least 2 characters" })
+      .max(100, { message: "product name is too long" }),
+    supplier_name:z.string()
+      .trim()
+      .min(2, { message: "supplier name must be at least 2 characters" })
+      .max(100, { message: "supplier name is too long" }),
+      category:z.enum(Object.values(ProductType) as [string, ...string[]]),
+      
+quantity: z
+    .number()
+    .int("Quantity must be a whole number")
+    .positive("Quantity must be greater than 0")
+    .min(1, "Quantity must be at least 1")
+    .max(999999, "Quantity is too large"),
+
+price: z
+    .number()
+    .positive("Price must be greater than 0")
+    .min(0.01, "Price must be at least 0.01")
+    .max(999999.99, "Price is too high"),
+   expiry_date: z
+        .string()
+        .datetime({ message: "Invalid date format" })
+        .transform((str) => new Date(str))
+        .refine(
+            (date) => date > new Date(),
+            { message: "Expiry date must be in the future" }
+        )
+        .optional(),
+
+  });
