@@ -25,7 +25,7 @@ export async function POST(request:NextRequest){
         const parse=addProductSchema.safeParse(body);
         logger.info(`${body}`)
            if (!parse.success) {
-      throw new BadRequestException("Invalid create supplier credntials", {
+      throw new BadRequestException("Invalid create product credntials", {
         errors: parse.error.issues.map((issue) => ({
           path: issue.path,
           message: issue.message,
@@ -38,7 +38,7 @@ export async function POST(request:NextRequest){
 
   return NextResponse.json({
             success:true,
-            message:'created supplier',
+            message:'created product',
             data:mappedResult
         },
         {status:201}

@@ -121,7 +121,7 @@ export class SupplierRepo{
                 })
                 if(existing){
                     throw new ItemExists();
-                }
+                 }
             }
             //only the provided fields are written, the rest keep their current value
             const updatedSupplier=await prisma.supplier.update({

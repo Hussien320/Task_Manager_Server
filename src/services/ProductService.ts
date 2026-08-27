@@ -1,8 +1,10 @@
 import { ProductType, TransactionType } from "@/app/generated/prisma/enums";
+import { emailService } from "@/lib/EmailService";
 import { appsettingRepo } from "@/repository/AppSettingRepo";
 import { inventoryRepo } from "@/repository/InventoryLogRepo";
 import { productRepo } from "@/repository/ProductRepo";
 import { supplierRepo } from "@/repository/SupplierRepo";
+import { userRepo } from "@/repository/UserRepo";
 import { ProductResponse, toProductResponse } from "@/types/Product";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
@@ -68,7 +70,62 @@ export class ProductService{
             }
         
         }
+        async withdrawProduct(userid:string,data:{productname:string,quantity:number}):Promise<ProductResponse>{
+            try{
+                
+              
+                //get the product to update
+                const targetproduct=await productRepo.getProductByName(data.productname);
+                if(!targetproduct){
+                    logger.error('product not found');
+                    throw new ItemNotFoundException('product not found');
+
+                }
+               
+                let  newquantity;
+                if(data.quantity<=targetproduct.quantity){
+                     newquantity=targetproduct.quantity-data.quantity
+
+                }
+               else{
+                logger.error("insufficient stock");
+                throw new  BadRequestException(`insufficient stock requested :${data.quantity} ,available:${targetproduct.quantity}`)
+               }
+
+               //upadte the product
+               const updatedproduct=await productRepo.updateProduct(targetproduct.id,{quantity:newquantity});
+               const mappedresponse=toProductResponse(updatedproduct);
+               //UPDATE THE LOGG
+               const logged=await inventoryRepo.updateInventory({userid:userid,productid:updatedproduct.id,transactiontype:TransactionType.WITHDRAWAL,quantity_changed:data.quantity,unit_price_at_time:Number(updatedproduct.price)});
+                 logger.info(`${logged.transaction_type} about ${logged.quantity_changed} ,price:${logged.unit_price_at_time} at ${logged.logged_at}`);
+                //check if the stock didnot surpas the threshold
+                const threshold=await appsettingRepo.getSettingvalue(targetproduct.category);
+
+                if(newquantity<=threshold){
+                    //generate the email
+                    //get the id of the manager
+                    const admin=await userRepo.getadminUser();
+                    if(!admin){
+                        throw new ItemNotFoundException('manager not found')
+                    }
+                    await emailService.sendLowStockAlert(admin.email,updatedproduct.name,updatedproduct.quantity,threshold);
+
+                    
+                }
+               return mappedresponse;
+            }
+            catch(error){
+
+                if (error instanceof BadRequestException || error instanceof ItemNotFoundException) {
+                throw error;
+            }
+            logger.error('Error creating product', error);
+            throw new DBException('Error creating product', error as Error);
+            
+            }
+            }
+        }
     
-}
+
 
 export const productservice=ProductService.getinsatnce();

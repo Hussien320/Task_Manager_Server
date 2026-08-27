@@ -4,6 +4,7 @@ import logger from "@/utils/logger";
 import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { User } from "@/app/generated/prisma/browser";
+import { ROLE } from "@/types/Roles";
 
 
 export class UserService {
@@ -44,6 +45,7 @@ export class UserService {
    async updatePassword(email:string,pass:string){
       await userRepo.updateUserPassword(email,pass);
    }
+  
 }
 
 export const userService=UserService.getInstance();
