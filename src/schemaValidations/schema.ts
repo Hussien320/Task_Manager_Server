@@ -107,14 +107,21 @@ price: z
     .positive("Price must be greater than 0")
     .min(0.01, "Price must be at least 0.01")
     .max(999999.99, "Price is too high"),
-   expiry_date: z
-        .string()
-        .datetime({ message: "Invalid date format" })
-        .transform((str) => new Date(str))
-        .refine(
-            (date) => date > new Date(),
-            { message: "Expiry date must be in the future" }
-        )
-        .optional(),
+  expiry_date: z
+    .string()
+    .refine(
+        (val) => {
+            // Check if it's a valid date string
+            const date = new Date(val);
+            return !isNaN(date.getTime());
+        },
+        { message: "Invalid date format. Use YYYY-MM-DD or ISO format" }
+    )
+    .transform((str) => new Date(str))
+    .refine(
+        (date) => date > new Date(),
+        { message: "Expiry date must be in the future" }
+    )
+    .optional(),
 
   });
