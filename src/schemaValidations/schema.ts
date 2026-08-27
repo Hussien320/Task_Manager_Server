@@ -125,3 +125,18 @@ price: z
     .optional(),
 
   });
+  export const withdrawProductScehma=z.object({
+      name:z.string()
+      .trim()
+      .min(2, { message: "product name must be at least 2 characters" })
+      .max(100, { message: "product name is too long" }),
+      quantity: z
+    .number()
+    .int("Quantity must be a whole number")
+    .positive("Quantity must be greater than 0")
+    .min(1, "Quantity must be at least 1")
+    .max(999999, "Quantity is too large"),
+
+  }
+
+  )

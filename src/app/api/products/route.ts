@@ -23,7 +23,7 @@ export async function POST(request:NextRequest){
         }
        
         const parse=addProductSchema.safeParse(body);
-        logger.info(`${body}`)
+      
            if (!parse.success) {
       throw new BadRequestException("Invalid create product credntials", {
         errors: parse.error.issues.map((issue) => ({
