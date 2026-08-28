@@ -51,6 +51,24 @@ export class ProductRepo{
 
         }
     }
+    async getAllProducts():Promise<Product[]>{
+        try{
+            const products=await prisma.product.findMany({
+               
+                orderBy:[
+                    {name:'asc'}
+                ]
+            })
+            return products
+        }
+        catch(error){
+            logger.error('error while retrieving the products');
+            throw new DBException('error while getting the products',error as Error);
+
+
+        }
+
+    }
     async getProductByName(name:string):Promise<Product | null>{
         try{
             const targetproduct=await prisma.product.findFirst({

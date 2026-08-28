@@ -14,6 +14,11 @@ suppliername?:string
 
 
 }
+export interface ProductListResponse{
+ 
+    products: ProductResponse[];
+    total: number;
+}
 export function toProductResponse(product:Product,suppliername?:string):ProductResponse{
     return{
         id:product.id,
@@ -29,3 +34,6 @@ export function toProductResponse(product:Product,suppliername?:string):ProductR
 
     }
 }
+ export function  toProductResponseArray(products: Product[],suppliername?:string): ProductResponse[] {
+        return products.map(product => toProductResponse(product,suppliername));
+    }

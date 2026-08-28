@@ -3,11 +3,12 @@ import { authGuard } from "@/lib/auth/guard";
 import { getUserIdFromRequest } from "@/lib/auth/requestHelper";
 import { addProductSchema } from "@/schemaValidations/schema";
 import { productservice } from "@/services/ProductService";
-import { ROLE } from "@/types/Roles";
+import { PERMISSION, ROLE } from "@/types/Roles";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import handleRouteError from "@/utils/handleRouteError";
 import logger from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
+import { success } from "zod";
 
 export async function POST(request:NextRequest){
     let body;
@@ -59,4 +60,24 @@ export async function POST(request:NextRequest){
 
     }
 
+}
+export async function GET(request:NextRequest){
+    try{
+        const autherror=authGuard(request,{requirePermission:PERMISSION.READ_ALL_PRODUCTS});
+        if(autherror) throw autherror
+        const mappedresponse=await productservice.getProducts();
+        return NextResponse.json({
+            success:true,
+            data:mappedresponse,
+            meta:{
+                total:mappedresponse.total
+            }
+        })
+    }
+     catch(error){
+                return handleRouteError(error, {
+                    operation: 'GET /api/products',
+                    permissionMessage: 'You do not have permission to view products'
+                });
+            }
 }

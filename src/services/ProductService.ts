@@ -1,11 +1,13 @@
+import { Product } from "@/app/generated/prisma/client";
 import { ProductType, TransactionType } from "@/app/generated/prisma/enums";
+
 import { emailService } from "@/lib/EmailService";
 import { appsettingRepo } from "@/repository/AppSettingRepo";
 import { inventoryRepo } from "@/repository/InventoryLogRepo";
 import { productRepo } from "@/repository/ProductRepo";
 import { supplierRepo } from "@/repository/SupplierRepo";
 import { userRepo } from "@/repository/UserRepo";
-import { ProductResponse, toProductResponse } from "@/types/Product";
+import { ProductListResponse, ProductResponse, toProductResponse, toProductResponseArray } from "@/types/Product";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
@@ -20,6 +22,7 @@ export class ProductService{
         }
         return ProductService.isntance;
     }
+    
     async createProduct(userid:string ,data:{supplier_name:string,name:string,category:ProductType,quantity:number,price:number, expiry_date?:Date}):Promise<ProductResponse>{
         try{
             //check if if category is perishabel
@@ -124,6 +127,23 @@ export class ProductService{
             
             }
             }
+            
+          async getProducts(): Promise<ProductListResponse> {
+    try {
+        const products = await productRepo.getAllProducts() 
+        
+       ;
+        const mappedproducts = toProductResponseArray(products);
+        
+        return {
+            products: mappedproducts,
+            total: mappedproducts.length
+        };
+    } catch (error) {
+        logger.error('Error getting products', error);
+        throw new DBException('Error getting products', error as Error);
+    }
+}
         }
     
 
