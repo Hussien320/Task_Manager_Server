@@ -47,6 +47,20 @@ export class SupplierRepo{
 
         }
     }
+    async getSupplierByName(name:string):Promise<Supplier | null>{
+        try{
+            const supplier=await prisma.supplier.findFirst({
+                where:{
+                    name:name
+                }
+            })
+            return supplier;
+        }
+        catch(error){
+            logger.error('error while retreiving the supplier');
+            throw new DBException('error while retreiving the supplier',error as Error);
+        }
+    }
      async getSupplierById(id: string): Promise<Supplier | null> {
         try {
             const supplier = await prisma.supplier.findUnique({
@@ -107,7 +121,7 @@ export class SupplierRepo{
                 })
                 if(existing){
                     throw new ItemExists();
-                }
+                 }
             }
             //only the provided fields are written, the rest keep their current value
             const updatedSupplier=await prisma.supplier.update({

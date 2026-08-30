@@ -1,6 +1,8 @@
 
- import { User } from "@/app/generated/prisma/client";
+ import { User, UserRole } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import { ROLE } from "@/types/Roles";
+
 
 import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException"
 
@@ -104,6 +106,14 @@ export  class UserRepo{
 
      }
 
+    }
+    async getadminUser():Promise<User | null>{
+        const user=await prisma.user.findFirst({
+            where:{
+                role:UserRole.ADMIN
+            }
+        });
+        return user;
     }
      async updateUserPassword(email:string,pass:string):Promise<void>{
         try{
