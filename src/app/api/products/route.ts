@@ -6,9 +6,9 @@ import { productservice } from "@/services/ProductService";
 import { PERMISSION, ROLE } from "@/types/Roles";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import handleRouteError from "@/utils/handleRouteError";
-import logger from "@/utils/logger";
+
 import { NextRequest, NextResponse } from "next/server";
-import { success } from "zod";
+
 
 export async function POST(request:NextRequest){
     let body;

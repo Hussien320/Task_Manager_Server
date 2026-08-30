@@ -5,7 +5,7 @@ import logger from "@/utils/logger";
 
 export class AppSettingRepo{
     private static instance :AppSettingRepo;
-    static getinstance():AppSettingRepo{
+    static getInstance():AppSettingRepo{
         if(!AppSettingRepo.instance){
             AppSettingRepo.instance=new AppSettingRepo();
         }
@@ -44,4 +44,4 @@ export class AppSettingRepo{
 }
 
 }
-export const appsettingRepo=AppSettingRepo.getinstance();
+export const appsettingRepo=AppSettingRepo.getInstance();

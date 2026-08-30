@@ -29,8 +29,8 @@ export class ProductService{
                let expiry_date: Date | null = null;
             if(data.category==ProductType.VEGTABLE){
                 if(!data.expiry_date){
-                    logger.error('expiray date is required fro perishabel products');
-                    throw new BadRequestException('expiray date is required fro perishabel products')
+                    logger.error('expiray date is required fro perishable products');
+                    throw new BadRequestException('expiray date is required fro perishable products')
                 }
                 expiry_date=data.expiry_date;
                

@@ -125,7 +125,7 @@ price: z
     .optional(),
 
   });
-  export const withdrawProductScehma=z.object({
+  export const withdrawProductSchema=z.object({
       name:z.string()
       .trim()
       .min(2, { message: "product name must be at least 2 characters" })

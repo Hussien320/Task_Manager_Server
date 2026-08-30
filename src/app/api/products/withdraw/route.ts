@@ -1,6 +1,6 @@
 import { authGuard } from "@/lib/auth/guard";
 import { getUserIdFromRequest } from "@/lib/auth/requestHelper";
-import { withdrawProductScehma } from "@/schemaValidations/schema";
+import {  withdrawProductSchema } from "@/schemaValidations/schema";
 import { productservice } from "@/services/ProductService";
 import { ROLE } from "@/types/Roles";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
@@ -19,7 +19,7 @@ export async function POST(request:NextRequest){
                       throw new BadRequestException("Bad request: request body must be valid JSON");
         
                 }
-            const parse=withdrawProductScehma.safeParse(body);
+            const parse=withdrawProductSchema.safeParse(body);
                if (!parse.success) {
       throw new BadRequestException("Invalid withdraw product credntials", {
         errors: parse.error.issues.map((issue) => ({
@@ -36,7 +36,7 @@ export async function POST(request:NextRequest){
             message:'withdraw product',
             data:mapped_response
         },
-        {status:201}
+        {status:200}
     )
         
 

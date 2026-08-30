@@ -4,7 +4,7 @@ import { DBException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 export class InventoryLogRepo{
     private static instance :InventoryLogRepo;
-    static getinstance():InventoryLogRepo{
+    static getInstance():InventoryLogRepo{
         if(!InventoryLogRepo.instance){
             InventoryLogRepo.instance=new InventoryLogRepo();
         }
@@ -33,4 +33,4 @@ export class InventoryLogRepo{
         }
     }
 }
-export const inventoryRepo=InventoryLogRepo.getinstance();
+export const inventoryRepo=InventoryLogRepo.getInstance();
