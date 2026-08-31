@@ -21,6 +21,7 @@ export type RouteErrorContext = {
     permissionMessage?: string;
     /** 400 message when the resource already exists. */
     itemExistsMessage?: string;
+    itemNotFoundMessage?:string
 };
 
 /**
@@ -45,7 +46,8 @@ export function handleRouteError(
     const {
         operation = 'request',
         permissionMessage = 'You do not have permission to perform this action',
-        itemExistsMessage = 'Item already exists'
+        itemExistsMessage = 'Item already exists',
+        itemNotFoundMessage='Item not found',
     } = context;
 
     // ============================================
@@ -127,7 +129,7 @@ export function handleRouteError(
         return NextResponse.json(
             {
                 success: false,
-                message: error.message || 'Resource not found',
+                message: itemNotFoundMessage,
                 errorType: 'ItemNotFoundException'
             },
             { status: 404 }
