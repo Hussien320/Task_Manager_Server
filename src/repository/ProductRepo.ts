@@ -148,5 +148,63 @@ export class ProductRepo{
             throw new DBException('Error while updating product', error as Error);
         }
     }
+    async getProductById(id:string):Promise<Product | null>{
+        try{
+            const target=await prisma.product.findUnique({
+                where:{
+                    id:id
+                }
+            })
+            return target;
+        }
+        catch(error){
+            logger.error('cannot get product');
+            throw new DBException('cannot get  the product',error as Error);
+        }
+    }
+async getProductHistory(productid:string):Promise<any>{
+    try{
+        const history=await prisma.product.findFirst({
+            select:{
+                id:true,
+                name:true,
+                category:true,
+                quantity:true,
+                low_stock_threshold:true,
+                supplier_id:true,
+                supplier:{
+                    select:{
+                        name:true
+                    }
+
+                },
+            inventoryLogs:{
+                select:{
+                    transaction_type:true,
+                    quantity_changed:true,
+                    unit_price_at_time:true,
+                    logged_at:true
+
+                },
+                orderBy:{
+                    logged_at:'desc'
+                }
+            }
+        },
+        where:{
+            id:productid
+        }
+        
+        
+
+    })
+    return history
+    }
+    catch(error){
+        logger.error('error in fetching the history');
+        throw new DBException('error in fetching history',error as Error);
+
+    }
+}
 }
 export const productRepo=ProductRepo.getinstance();
