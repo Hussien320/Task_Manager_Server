@@ -11,7 +11,7 @@ export async function POST(request:NextRequest){
      let body;
      try{
         const autherror=authGuard(request,{requireRole:ROLE.EMPLOYEE});
-        if(autherror) throw autherror;
+        if(autherror) return autherror;
           try{
                     body=await request.json();
                 }
@@ -47,6 +47,7 @@ export async function POST(request:NextRequest){
                    return handleRouteError(error, {
                           operation: 'withdraw',
                           permissionMessage: 'You do not have permission to withdraw product',
+                          itemNotFoundMessage:'Product not found',
                           
                       });
      }

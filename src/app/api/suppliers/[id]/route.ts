@@ -20,7 +20,8 @@ return new NextResponse(null, { status: 204 });
 {
     return handleRouteError(error, {
         operation: 'deletion',
-        permissionMessage: 'You do not have permission to delete supplider'
+        permissionMessage: 'You do not have permission to delete supplider',
+        itemNotFoundMessage:'Supplier not found'
     });
 }
 }
@@ -74,7 +75,7 @@ export async function PATCH(request:NextRequest,{ params }: { params: Promise<{ 
         return handleRouteError(error, {
             operation: 'update',
             permissionMessage: 'You do not have permission to update suppliers',
-            itemExistsMessage: 'Another supplier already uses this name'
+            itemNotFoundMessage:'Supplier not found'
         });
     }
 }

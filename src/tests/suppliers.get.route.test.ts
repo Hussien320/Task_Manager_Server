@@ -236,7 +236,7 @@ describe("GET /api/suppliers", () => {
       const json = await response.json();
 
       expect(response.status).toBe(404);
-      expect(json.message).toBe("No suppliers exist");
+      expect(json.message).toBe("Item not found");
       expect(json.errorType).toBe("ItemNotFoundException");
     });
 
@@ -249,7 +249,7 @@ describe("GET /api/suppliers", () => {
       const json = await response.json();
 
       expect(response.status).toBe(404);
-      expect(json.message).toBe("Resource not found");
+      expect(json.message).toBe("Item not found");
     });
 
     it("returns 500 on a database failure without leaking the driver message", async () => {

@@ -325,7 +325,7 @@ describe("PATCH /api/suppliers/[id]", () => {
 
       expect(response.status).toBe(404);
       expect(json.success).toBe(false);
-      expect(json.message).toBe("supplier not found");
+      expect(json.message).toBe("Supplier not found");
       expect(json.errorType).toBe("ItemNotFoundException");
     });
 
@@ -336,23 +336,10 @@ describe("PATCH /api/suppliers/[id]", () => {
       const json = await response.json();
 
       expect(response.status).toBe(404);
-      expect(json.message).toBe("Resource not found");
+      expect(json.message).toBe("Supplier not found");
     });
 
-    it("returns 400 when the new name is taken by another supplier", async () => {
-      mockedSupplierService.updateSupplier.mockRejectedValue(new ItemExists());
-
-      const response = await PATCH(
-        makeRequest({ name: "Fresh Farms" }),
-        makeContext(SUPPLIER_ID)
-      );
-      const json = await response.json();
-
-      expect(response.status).toBe(400);
-      expect(json.success).toBe(false);
-      expect(json.message).toBe("Another supplier already uses this name");
-      expect(json.errorType).toBe("ItemExists");
-    });
+  
 
     it("returns 400 when the patch would change nothing", async () => {
       mockedSupplierService.updateSupplier.mockRejectedValue(

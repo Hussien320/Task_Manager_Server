@@ -9,7 +9,7 @@ import { supplierRepo } from "@/repository/SupplierRepo";
 import { userRepo } from "@/repository/UserRepo";
 import { ProductHistoryResponse, ProductListResponse, ProductResponse, toProductResponse, toProductResponseArray } from "@/types/Product";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
-import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
+import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
 
@@ -64,15 +64,10 @@ export class ProductService{
             return mappedResponse;
         }
         catch(error){
-               if (error instanceof BadRequestException || error instanceof ItemNotFoundException) {
-                throw error;
-            }
-            logger.error('Error creating product', error);
-            throw new DBException('Error creating product', error as Error);
-            
-            }
+              throw error
         
         }
+    }
         async withdrawProduct(userid:string,data:{productname:string,quantity:number}):Promise<ProductResponse>{
             try{
                 

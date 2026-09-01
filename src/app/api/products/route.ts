@@ -14,7 +14,7 @@ export async function POST(request:NextRequest){
     let body;
     try{
         const autherror=authGuard(request,{requireRole:ROLE.EMPLOYEE})
-        if(autherror) throw autherror;
+        if(autherror) return autherror;
         try{
             body=await request.json();
         }
@@ -55,7 +55,8 @@ export async function POST(request:NextRequest){
            return handleRouteError(error, {
                   operation: 'addition',
                   permissionMessage: 'You do not have permission to add product',
-                  itemExistsMessage: 'product already created'
+                  itemExistsMessage: 'product already created',
+                  itemNotFoundMessage:'Supplier not found'
               });
 
     }
@@ -64,7 +65,7 @@ export async function POST(request:NextRequest){
 export async function GET(request:NextRequest){
     try{
         const autherror=authGuard(request,{requirePermission:PERMISSION.READ_ALL_PRODUCTS});
-        if(autherror) throw autherror
+        if(autherror) return autherror
         const mappedresponse=await productservice.getProducts();
         return NextResponse.json({
             success:true,
