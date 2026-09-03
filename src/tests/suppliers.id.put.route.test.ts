@@ -133,7 +133,7 @@ describe("PUT /api/suppliers/[id]", () => {
   describe("business rule failures", () => {
     it("returns 404 when the supplier does not exist", async () => {
       mockedSupplierService.softDelete.mockRejectedValue(
-        new ItemNotFoundException("supplier not found")
+        new ItemNotFoundException("Item not found")
       );
 
       const response = await PUT(makeRequest(), makeContext("ghost-id"));
@@ -141,7 +141,7 @@ describe("PUT /api/suppliers/[id]", () => {
 
       expect(response.status).toBe(404);
       expect(json.success).toBe(false);
-      expect(json.message).toBe("supplier not found");
+      expect(json.message).toBe("Supplier not found");
       expect(json.errorType).toBe("ItemNotFoundException");
     });
 
@@ -273,7 +273,7 @@ describe("PUT /api/suppliers/[id]", () => {
       const json = await response.json();
 
       expect(response.status).toBe(404);
-      expect(json.message).toBe("Resource not found");
+      expect(json.message).toBe("Supplier not found");
     });
   });
 });

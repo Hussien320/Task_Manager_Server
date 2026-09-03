@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    return handleRouteError(error, { operation: 'login' });
+    return handleRouteError(error, { operation: 'login',
+      itemNotFoundMessage: 'User not found',
+     });
   }
 }

@@ -45,6 +45,8 @@ export async function POST(request:NextRequest) {
 
     }
     catch(error){
-        return handleRouteError(error, { operation: 'verify_reset' });
+        return handleRouteError(error, { operation: 'verify_reset',
+          itemNotFoundMessage: 'User not found',
+         });
     }
 }

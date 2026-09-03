@@ -32,5 +32,6 @@ export class InventoryLogRepo{
             throw new DBException('error while creating the log',error as Error);
         }
     }
+  
 }
 export const inventoryRepo=InventoryLogRepo.getInstance();

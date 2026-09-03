@@ -246,7 +246,7 @@ describe("GET /api/suppliers/active_suppliers", () => {
 
       expect(response.status).toBe(404);
       expect(json.success).toBe(false);
-      expect(json.message).toBe("No active suppliers");
+      expect(json.message).toBe("Item not found");
       expect(json.errorType).toBe("ItemNotFoundException");
     });
 
@@ -259,7 +259,7 @@ describe("GET /api/suppliers/active_suppliers", () => {
       const json = await response.json();
 
       expect(response.status).toBe(404);
-      expect(json.message).toBe("Resource not found");
+      expect(json.message).toBe("Item not found");
     });
   });
 });

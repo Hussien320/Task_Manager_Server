@@ -162,7 +162,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await response.json();
 
       expect(response.status).toBe(404);
-      expect(json.message).toContain("user not found");
+      expect(json.message).toContain("User not found");
       expect(mockedAuthService.persistReset).not.toHaveBeenCalled();
       expect(mockedEmailService.sendResetPasswordEmail).not.toHaveBeenCalled();
     });

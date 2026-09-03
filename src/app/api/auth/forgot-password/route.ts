@@ -60,6 +60,8 @@ import { NextRequest,NextResponse } from "next/server";
 
     }
     catch(error){
-        return handleRouteError(error, { operation: 'forgot password' });
+        return handleRouteError(error, { operation: 'forgot password',
+          itemNotFoundMessage: 'User not found',
+         });
     }
   }

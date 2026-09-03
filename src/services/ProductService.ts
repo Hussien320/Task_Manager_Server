@@ -7,9 +7,9 @@ import { inventoryRepo } from "@/repository/InventoryLogRepo";
 import { productRepo } from "@/repository/ProductRepo";
 import { supplierRepo } from "@/repository/SupplierRepo";
 import { userRepo } from "@/repository/UserRepo";
-import { ProductListResponse, ProductResponse, toProductResponse, toProductResponseArray } from "@/types/Product";
+import { ProductHistoryResponse, ProductListResponse, ProductResponse, toProductResponse, toProductResponseArray } from "@/types/Product";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
-import { DBException, ItemNotFoundException } from "@/utils/exceptions/RepoException";
+import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
 
@@ -64,15 +64,10 @@ export class ProductService{
             return mappedResponse;
         }
         catch(error){
-               if (error instanceof BadRequestException || error instanceof ItemNotFoundException) {
-                throw error;
-            }
-            logger.error('Error creating product', error);
-            throw new DBException('Error creating product', error as Error);
-            
-            }
+              throw error
         
         }
+    }
         async withdrawProduct(userid:string,data:{productname:string,quantity:number}):Promise<ProductResponse>{
             try{
                 
@@ -143,6 +138,32 @@ export class ProductService{
         logger.error('Error getting products', error);
         throw new DBException('Error getting products', error as Error);
     }
+}
+async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
+    
+        const history=await productRepo.getProductHistory(id);
+        if(!history){
+            logger.error('no hsitory found for product');
+            throw  new ItemNotFoundException('no history found');
+        }
+          return {
+                id: history.id,
+                name: history.name,
+                category: history.category,
+                quantity: history.quantity,
+                low_stock_threshold: history.low_stock_threshold,
+                supplier_id: history.supplier_id,
+                supplier_name: history.supplier?.name || 'Unknown Supplier',  // ← Flattened
+                inventoryLogs: history.inventoryLogs.map((log: any) => ({
+                    transaction_type: log.transaction_type,
+                    quantity_changed: log.quantity_changed,
+                    unit_price_at_time: log.unit_price_at_time ? Number(log.unit_price_at_time) : null,
+                    logged_at: log.logged_at,
+                })),
+            };
+       
+    
+
 }
         }
     

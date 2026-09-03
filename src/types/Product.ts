@@ -19,6 +19,21 @@ export interface ProductListResponse{
     products: ProductResponse[];
     total: number;
 }
+export interface ProductHistoryResponse {
+    id: string;
+    name: string;
+    category: ProductType;
+    quantity: number;
+    low_stock_threshold: number;
+    supplier_id: string;
+    supplier_name: string;  // ← Flattened from supplier.name
+    inventoryLogs: {
+        transaction_type: string;
+        quantity_changed: number;
+        unit_price_at_time: number | null;
+        logged_at: Date;
+    }[];
+}
 export function toProductResponse(product:Product,suppliername?:string):ProductResponse{
     return{
         id:product.id,
