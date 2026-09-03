@@ -1,5 +1,6 @@
 import { Product, ProductType } from "@/app/generated/prisma/client";
 import prisma from "@/lib/db";
+;
 import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
@@ -198,7 +199,7 @@ async getProductHistory(productid:string):Promise<any>{
         
 
     })
-    return history
+    return history ;
     }
     catch(error){
         logger.error('error in fetching the history');

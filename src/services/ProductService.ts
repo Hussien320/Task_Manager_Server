@@ -140,7 +140,7 @@ export class ProductService{
     }
 }
 async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
-    try{
+    
         const history=await productRepo.getProductHistory(id);
         if(!history){
             logger.error('no hsitory found for product');
@@ -162,10 +162,7 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
                 })),
             };
        
-    }
-    catch(error){
-        throw error;
-    }
+    
 
 }
         }

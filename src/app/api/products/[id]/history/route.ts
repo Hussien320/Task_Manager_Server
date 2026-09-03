@@ -3,7 +3,6 @@ import { productservice } from "@/services/ProductService";
 import { ROLE } from "@/types/Roles";
 import handleRouteError from "@/utils/handleRouteError";
 import { NextRequest, NextResponse } from "next/server";
-import { success } from "zod";
 
 export async function GET(request:NextRequest,{ params }: { params: Promise<{ id: string }> }){
     try{
