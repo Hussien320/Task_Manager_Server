@@ -5,6 +5,7 @@ import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptio
 import logger from "@/utils/logger";
 
 
+
 export class ProductRepo{
     private static instance:ProductRepo;
     static getinstance():ProductRepo{
@@ -205,6 +206,33 @@ async getProductHistory(productid:string):Promise<any>{
         logger.error('error in fetching the history');
         throw new DBException('error in fetching history',error as Error);
 
+    }
+}
+ async GetExpiringProducts(expiryThreshold: number): Promise<Product[] | null> {
+    try{
+      const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const alertDate = new Date(today);
+    alertDate.setDate(today.getDate() + expiryThreshold);
+     const products = await prisma.product.findMany({
+      where: {
+        expiry_date: {
+          not: null,
+          gte: today,
+          lte: alertDate
+        }
+      },
+      orderBy: {
+        expiry_date: 'asc'
+      }
+     
+    });
+    return products
+    }
+    catch(error){
+        logger.error('error in fetching expiring products',error);
+        throw new DBException('error in fetching expiring products',error as Error);
     }
 }
 }

@@ -107,8 +107,8 @@ export  class UserRepo{
      }
 
     }
-    async getadminUser():Promise<User | null>{
-        const user=await prisma.user.findFirst({
+    async getadminUser():Promise<User[] | null>{
+        const user=await prisma.user.findMany({
             where:{
                 role:UserRole.ADMIN
             }

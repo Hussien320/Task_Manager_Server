@@ -42,6 +42,23 @@ export class AppSettingRepo{
         throw new DBException('Error while getting the setting value', error as Error);
     }
 }
+async getExpiryThreshold(): Promise<number> {
+    try{
+        const expirtySetting = await prisma.appSetting.findUnique({
+            where: {
+                setting_key: 'expiry_warning_days'
+            }
+        });
+        logger.debug(`Expiry threshold: ${expirtySetting ? expirtySetting.setting_value : 'not set'} (from AppSettings)`);
+        return expirtySetting ? parseInt(expirtySetting.setting_value, 10) : 7; // Default to 7 days if not set
+        
+
+    }
+    catch(error){
+        logger.error('Error while getting the expiry threshold', error);
+        throw new DBException('Error while getting the expiry threshold', error as Error);
+    }
+}
 
 }
 export const appsettingRepo=AppSettingRepo.getInstance();
