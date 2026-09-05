@@ -34,6 +34,13 @@ export interface ProductHistoryResponse {
         logged_at: Date;
     }[];
 }
+ export interface ExpiringProduct {
+  id: string;
+  name: string;
+  quantity: number;
+  expiry_date: Date;
+  daysUntilExpiry: number;
+}
 export function toProductResponse(product:Product,suppliername?:string):ProductResponse{
     return{
         id:product.id,
@@ -52,3 +59,19 @@ export function toProductResponse(product:Product,suppliername?:string):ProductR
  export function  toProductResponseArray(products: Product[],suppliername?:string): ProductResponse[] {
         return products.map(product => toProductResponse(product,suppliername));
     }
+    export function toExipiringProductResponseArray(products: Product[]): ExpiringProduct[] {
+        const today = new Date();
+        return products.map(product => {
+            const expiryDate = product.expiry_date!;
+            const timeDiff = expiryDate.getTime() - today.getTime();
+            const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            return {
+                id: product.id,
+                name: product.name,
+                quantity: product.quantity,
+                expiry_date: expiryDate,
+                daysUntilExpiry
+            };
+        });
+    }
+        
