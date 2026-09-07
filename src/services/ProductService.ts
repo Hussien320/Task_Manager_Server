@@ -1,4 +1,4 @@
-import { Product } from "@/app/generated/prisma/client";
+
 import { ProductType, TransactionType } from "@/app/generated/prisma/enums";
 
 import { emailService } from "@/lib/EmailService";
@@ -7,9 +7,9 @@ import { inventoryRepo } from "@/repository/InventoryLogRepo";
 import { productRepo } from "@/repository/ProductRepo";
 import { supplierRepo } from "@/repository/SupplierRepo";
 import { userRepo } from "@/repository/UserRepo";
-import { ProductHistoryResponse, ProductListResponse, ProductResponse, toProductResponse, toProductResponseArray } from "@/types/Product";
+import { ExpiringProduct, ProductHistoryResponse, ProductListResponse, ProductResponse,  toExpiringProductResponseArray, toProductResponse, toProductResponseArray } from "@/types/Product";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
-import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptions/RepoException";
+import { DBException,  ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
 
@@ -106,8 +106,13 @@ export class ProductService{
                     if(!admin){
                         throw new ItemNotFoundException('manager not found')
                     }
-                    await emailService.sendLowStockAlert(admin.email,updatedproduct.name,updatedproduct.quantity,threshold);
-
+                    const adminEmails=admin.map((manager)=>manager.email);
+                    for(const email of adminEmails){
+                        await emailService.sendLowStockAlert(email,updatedproduct.name,updatedproduct.quantity,threshold);
+                    }
+                    /*
+    
+*/
                     
                 }
                return mappedresponse;
@@ -164,9 +169,18 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
        
     
 
-}
+        
         }
     
-
+    async GetExpiringProducts():Promise<ExpiringProduct[]>{
+        const expiryThreshold=await appsettingRepo.getExpiryThreshold();
+        const expiringProducts=await productRepo.GetExpiringProducts(expiryThreshold);
+        if(!expiringProducts || expiringProducts.length===0){
+            logger.info('no expiring products found');
+            return [];
+        }
+        return toExpiringProductResponseArray(expiringProducts);
+    }
+    }
 
 export const productservice=ProductService.getinsatnce();
