@@ -1,4 +1,4 @@
-import { Product } from "@/app/generated/prisma/client";
+
 import { ProductType, TransactionType } from "@/app/generated/prisma/enums";
 
 import { emailService } from "@/lib/EmailService";
@@ -7,9 +7,9 @@ import { inventoryRepo } from "@/repository/InventoryLogRepo";
 import { productRepo } from "@/repository/ProductRepo";
 import { supplierRepo } from "@/repository/SupplierRepo";
 import { userRepo } from "@/repository/UserRepo";
-import { ExpiringProduct, ProductHistoryResponse, ProductListResponse, ProductResponse, toExipiringProductResponseArray, toProductResponse, toProductResponseArray } from "@/types/Product";
+import { ExpiringProduct, ProductHistoryResponse, ProductListResponse, ProductResponse,  toExpiringProductResponseArray, toProductResponse, toProductResponseArray } from "@/types/Product";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
-import { DBException, ItemExists, ItemNotFoundException } from "@/utils/exceptions/RepoException";
+import { DBException,  ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import logger from "@/utils/logger";
 
 
@@ -179,7 +179,7 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
             logger.info('no expiring products found');
             return [];
         }
-        return toExipiringProductResponseArray(expiringProducts);
+        return toExpiringProductResponseArray(expiringProducts);
     }
     }
 

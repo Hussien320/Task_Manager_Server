@@ -18,7 +18,7 @@ export function startDevCron() {
 
     logger.info('🔄 Starting development cron scheduler...');
 
-    // Run every 2 minutes for testing
+   //rin evrey day at 7 am
     cron.schedule('0 7 * * *', async () => {
         logger.info('⏰ Running scheduled expiry alert (dev mode)...');
         try {

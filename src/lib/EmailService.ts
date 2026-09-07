@@ -1,5 +1,6 @@
 // src/lib/EmailService.ts
 import { ExpiringProduct } from '@/types/Product';
+import logger from '@/utils/logger';
 import nodemailer from 'nodemailer';
 
 interface EmailOptions {
@@ -39,10 +40,10 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email sent:', info.messageId);
+      logger.info('✅ Email sent:', info.messageId);
       return info;
     } catch (error) {
-      console.error('❌ Error sending email:', error);
+      logger.error('❌ Error sending email:', error);
       throw new Error('Failed to send email');
     }
   }
@@ -67,10 +68,10 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Low stock alert sent:', info.messageId);
+      logger.info('✅ Low stock alert sent:', info.messageId);
       return info;
     } catch (error) {
-      console.error('❌ Error sending low stock alert:', error);
+      logger.error('❌ Error sending low stock alert:', error);
       throw new Error('Failed to send low stock alert');
     }
   }
@@ -96,10 +97,10 @@ async sendExpiryAlert(
 
     try {
         const info = await this.transporter.sendMail(mailOptions);
-        console.log('✅ Expiry alert email sent:', info.messageId);
+        logger.info('✅ Expiry alert email sent:', info.messageId);
         return info;
     } catch (error) {
-        console.error('❌ Error sending expiry alert:', error);
+        logger.error('❌ Error sending expiry alert:', error);
         throw new Error('Failed to send expiry alert email');
     }
 }

@@ -208,7 +208,7 @@ async getProductHistory(productid:string):Promise<any>{
 
     }
 }
- async GetExpiringProducts(expiryThreshold: number): Promise<Product[] | null> {
+ async GetExpiringProducts(expiryThreshold: number): Promise<Product[] > {
     try{
       const today = new Date();
     today.setHours(0, 0, 0, 0);

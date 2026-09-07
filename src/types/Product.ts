@@ -59,7 +59,7 @@ export function toProductResponse(product:Product,suppliername?:string):ProductR
  export function  toProductResponseArray(products: Product[],suppliername?:string): ProductResponse[] {
         return products.map(product => toProductResponse(product,suppliername));
     }
-    export function toExipiringProductResponseArray(products: Product[]): ExpiringProduct[] {
+    export function toExpiringProductResponseArray(products: Product[]): ExpiringProduct[] {
         const today = new Date();
         return products.map(product => {
             const expiryDate = product.expiry_date!;
