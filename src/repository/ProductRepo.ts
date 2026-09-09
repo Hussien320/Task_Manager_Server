@@ -235,5 +235,24 @@ async getProductHistory(productid:string):Promise<any>{
         throw new DBException('error in fetching expiring products',error as Error);
     }
 }
+async updateProductquantity(id:string,quantity:number):Promise<Product>{
+    try{
+        const uppdatedProduct=await prisma.product.update({
+            where:{
+                id:id
+            },
+            data:{
+                quantity:quantity
+            }
+        })
+        return uppdatedProduct;
+    }
+    catch(error){
+        logger.error('error in updating product quantity',error);
+        throw new DBException('error in updating product quantity',error as Error);
+
+    }
 }
+}
+
 export const productRepo=ProductRepo.getinstance();

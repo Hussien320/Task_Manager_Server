@@ -182,6 +182,17 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
         }
         return toExpiringProductResponseArray(expiringProducts);
     }
+    async reloadProduct(id:string,quantity:number):Promise<ProductResponse>{
+      const targetproduct=await productRepo.getProductById(id);
+      if(!targetproduct){
+        logger.error('product not found');
+        throw new ItemNotFoundException('product not found');
+      }
+      const updatedquantity=targetproduct.quantity+quantity;
+      const updatedproduct=await productRepo.updateProductquantity(targetproduct.id,updatedquantity);
+      return toProductResponse(updatedproduct);  
+      
     }
+}
 
 export const productservice=ProductService.getinstance();
