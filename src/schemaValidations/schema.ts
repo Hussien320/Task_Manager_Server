@@ -84,6 +84,7 @@ export const updateSupplierSchema = z
         "At least one of name, product_type or is_active must be provided",
     }
   );
+
   export const addProductSchema=z.object({
   name:z.string()
       .trim()
@@ -137,6 +138,15 @@ price: z
     .min(1, "Quantity must be at least 1")
     .max(999999, "Quantity is too large"),
 
-  }
+  })
+  export const updateAppSettingsSchema=z.object({
+    category:z.enum(Object.values(ProductType) as [string, ...string[]]),
+    value: z
+    .number()
+    .int("Quantity must be a whole number")
+    .positive("Quantity must be greater than 0")
+    .min(1, "Quantity must be at least 1")
+    .max(999999, "Quantity is too large")
+  
+})
 
-  )

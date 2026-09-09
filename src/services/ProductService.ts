@@ -15,12 +15,12 @@ import logger from "@/utils/logger";
 
 
 export class ProductService{
-    private static isntance:ProductService;
-    static getinsatnce():ProductService{
-        if(!ProductService.isntance){
-            ProductService.isntance=new ProductService();
+    private static instance:ProductService;
+    static getinstance():ProductService{
+        if(!ProductService.instance){
+            ProductService.instance=new ProductService();
         }
-        return ProductService.isntance;
+        return ProductService.instance;
     }
     
     async createProduct(userid:string ,data:{supplier_name:string,name:string,category:ProductType,quantity:number,price:number, expiry_date?:Date}):Promise<ProductResponse>{
@@ -68,6 +68,7 @@ export class ProductService{
         
         }
     }
+  
         async withdrawProduct(userid:string,data:{productname:string,quantity:number}):Promise<ProductResponse>{
             try{
                 
@@ -183,4 +184,4 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
     }
     }
 
-export const productservice=ProductService.getinsatnce();
+export const productservice=ProductService.getinstance();
