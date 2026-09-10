@@ -46,13 +46,15 @@ export class AppSettingRepo{
 async updateSettingValue(category: ProductType, value: number,userid:string): Promise<void> {
     try {
         const key = `threshold_${category}`;
-        await prisma.appSetting.upsert({
+        await prisma.appSetting.update({
             where: { setting_key: key },
-            update: { setting_value: value.toString() },
-            create: { setting_key: key, setting_value: value.toString() ,
+            data: { 
+                 setting_key: key,
+                  setting_value: value.toString() ,
                 updated_by:userid,
                 updatedAt: new Date()
-            }
+             }
+          
 
             
         });

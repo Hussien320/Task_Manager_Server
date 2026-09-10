@@ -7,7 +7,7 @@ export interface AppSettingListResponse {
     settings: AppSettingResponse[];
     total: number;
 }
- export async function toAppSettingResponseArray(settings: AppSetting[]): Promise<AppSettingResponse[]> {
+ export  function toAppSettingResponseArray(settings: AppSetting[]): AppSettingResponse[] {
     return settings.map(setting => ({
         setting_key: setting.setting_key,
         setting_value: setting.setting_value

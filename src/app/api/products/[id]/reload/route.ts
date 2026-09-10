@@ -6,7 +6,7 @@ import { BadRequestException } from '@/utils/exceptions/http/BadRequestException
 import { updateProductquantitySchema } from '@/schemaValidations/schema';
 import { productservice } from '@/services/ProductService';
 
-export async function PUT(request: NextRequest,{params}:{params:Promise<{id:string}>}){ {
+export async function PUT(request: NextRequest,{params}:{params:Promise<{id:string}>}) {
     let body;
     try{
         const autherror=authGuard(request,{requirePermission:PERMISSION.RELOAD_PRODUCT});
@@ -41,4 +41,3 @@ export async function PUT(request: NextRequest,{params}:{params:Promise<{id:stri
             itemNotFoundMessage: 'product not found',
         });
     }}
-}
