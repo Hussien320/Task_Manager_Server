@@ -63,7 +63,8 @@ export enum PERMISSION {
   
   // C.5 Edit Product Attributes (FR B.3)
   UPDATE_PRODUCT = 'product:update',
-  
+  //
+  RELOAD_PRODUCT = 'product:reload',
   // C.6 Set Low-Stock Threshold (FR B.3)
   SET_THRESHOLD = 'product:set_threshold',
   
@@ -155,6 +156,7 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     PERMISSION.CREATE_PRODUCT,
     PERMISSION.READ_PRODUCT,
     PERMISSION.WITHDRAW_PRODUCT,
+    PERMISSION.RELOAD_PRODUCT,
 
     // Supplier (Read only - for dropdown selection)
     PERMISSION.READ_SUPPLIER,

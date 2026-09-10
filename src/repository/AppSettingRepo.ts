@@ -1,3 +1,4 @@
+import { AppSetting } from "@/app/generated/prisma/browser";
 import { ProductType } from "@/app/generated/prisma/enums";
 import prisma from "@/lib/db";
 import { DBException } from "@/utils/exceptions/RepoException";
@@ -42,6 +43,28 @@ export class AppSettingRepo{
         throw new DBException('Error while getting the setting value', error as Error);
     }
 }
+async updateSettingValue(category: ProductType, value: number,userid:string): Promise<void> {
+    try {
+        const key = `threshold_${category}`;
+        await prisma.appSetting.update({
+            where: { setting_key: key },
+            data: { 
+                 setting_key: key,
+                  setting_value: value.toString() ,
+                updated_by:userid,
+                updatedAt: new Date()
+             }
+          
+
+            
+        });
+        logger.debug(`Updated threshold for ${category} to ${value}`);
+    }
+    catch (error) {
+        logger.error('Error while updating the setting value', error);
+        throw new DBException('Error while updating the setting value', error as Error);
+    }
+}
 async getExpiryThreshold(): Promise<number> {
     try{
         const expirtySetting = await prisma.appSetting.findUnique({
@@ -57,6 +80,17 @@ async getExpiryThreshold(): Promise<number> {
     catch(error){
         logger.error('Error while getting the expiry threshold', error);
         throw new DBException('Error while getting the expiry threshold', error as Error);
+    }
+}
+async getAll():Promise<AppSetting[]>{
+    try{
+        const settings=await prisma.appSetting.findMany();
+        logger.debug(`Retrieved all app settings: ${JSON.stringify(settings)}`);
+        return settings;
+    }
+    catch(error){
+        logger.error('Error while retrieving all app settings', error);
+        throw new DBException('Error while retrieving all app settings', error as Error);
     }
 }
 
