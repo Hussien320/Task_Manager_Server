@@ -1,66 +1,198 @@
-release:
-  name: 📦 Release
-  runs-on: ubuntu-latest
-  needs: [build, test]
-  if: github.ref == 'refs/heads/main'
-  
-  steps:
-    - name: Grab the code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+name: StockPulse CI/CD
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ============ BUILD JOB ============
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Grab the code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+      
+      - name: Build the app
+        run: npm run build
+        env:
+          NODE_ENV: production
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stockpulse
+          JWT_SECRET: build-secret-key
+      
+      - name: Verify build output
+        run: |
+          echo "📁 .next contents:"
+          ls -la .next/
+          echo ""
+          echo "📊 Size:"
+          du -sh .next/
+      
+      - name: Create build tarball
+        run: |
+          tar -czf next-build.tar.gz \
+            --exclude='.next/cache' \
+            --exclude='.next/dev' \
+            --exclude='.next/diagnostics' \
+            --exclude='.next/node_modules' \
+            --exclude='.next/trace' \
+            --exclude='.next/trace-build' \
+            .next/
+          ls -lh next-build.tar.gz
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: next-build.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  # ============ TEST JOB ============
+  test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    needs: build
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: stockpulse_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Grab the code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Verify ts-node
+        run: npx ts-node --version
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stockpulse_test
+      
+      - name: Run tests with coverage
+        run: npm run test:coverage
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stockpulse_test
+          JWT_SECRET: test-secret-key
+          SMTP_HOST: smtp.test.com
+          SMTP_PORT: 587
+          SMTP_USER: test@example.com
+          SMTP_PASS: test-password
+          CRON_ENABLED: 'false'
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ============ RELEASE JOB ============
+  release:
+    name: 📦 Release
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.ref == 'refs/heads/main'
     
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: build-output
-    
-    - name: Extract build output
-      run: |
-        echo "📁 Downloaded:"
-        ls -la
-        tar -xzf next-build.tar.gz
-        echo ""
-        echo "📁 Extracted .next:"
-        ls -la .next/
-    
-    - name: Create deployment package
-      run: |
-        mkdir -p deploy-package
-        cp -r .next deploy-package/
-        cp package.json deploy-package/
-        cp package-lock.json deploy-package/
-        cp -r prisma deploy-package/ 2>/dev/null || true
-        cp -r public deploy-package/ 2>/dev/null || true
-        cd deploy-package
-        zip -r ../deploy-bundle.zip .
-        echo "📦 Deployment package:"
-        ls -lh ../deploy-bundle.zip
-    
-    - name: Version Bump
-      id: version
-      uses: phips28/gh-action-bump-version@master
-      with:
-        tag-prefix: 'v'
-        major-wording: 'MAJOR,breaking'
-        minor-wording: 'minor,feature'
-        patch-wording: 'patch,fixes,chore'
-        commit-message: 'CI: bump version to {{version}} [skip ci]'
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: deploy-bundle.zip
-        tag_name: ${{ steps.version.outputs.newTag }}
-        name: Release ${{ steps.version.outputs.newTag }}
-        draft: false
-        prerelease: false
-        make_latest: true
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Grab the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+      
+      - name: Extract build output
+        run: |
+          echo "📁 Downloaded files:"
+          ls -la
+          tar -xzf next-build.tar.gz
+          echo "📁 Extracted .next:"
+          ls -la .next/ | head -20
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy-package
+          cp -r .next deploy-package/
+          cp package.json deploy-package/
+          cp package-lock.json deploy-package/
+          cp -r prisma deploy-package/ 2>/dev/null || true
+          cp -r public deploy-package/ 2>/dev/null || true
+          cd deploy-package
+          zip -r ../deploy-bundle.zip .
+          ls -lh ../deploy-bundle.zip
+      
+      - name: Version Bump
+        id: version
+        uses: phips28/gh-action-bump-version@master
+        with:
+          tag-prefix: 'v'
+          major-wording: 'MAJOR,breaking'
+          minor-wording: 'minor,feature'
+          patch-wording: 'patch,fixes,chore'
+          commit-message: 'CI: bump version to {{version}} [skip ci]'
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: deploy-bundle.zip
+          tag_name: ${{ steps.version.outputs.newTag }}
+          name: Release ${{ steps.version.outputs.newTag }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
