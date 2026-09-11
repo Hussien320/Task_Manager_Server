@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-     "dev": "tsx server.ts",
+    "dev": "tsx server.ts",
     "dev:next": "next dev",
     "build": "next build",
     "start": "next start",
@@ -50,6 +50,7 @@
     "prisma-mock": "^1.1.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.2",
     "tsx": "^4.23.11",
     "typescript": "^5"
   }
