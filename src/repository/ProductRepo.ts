@@ -219,7 +219,7 @@ async getProductHistory(productid:string):Promise<any>{
       where: {
         expiry_date: {
           not: null,
-          gte: today,
+          
           lte: alertDate
         }
       },

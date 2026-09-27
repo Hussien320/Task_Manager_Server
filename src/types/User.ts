@@ -8,3 +8,7 @@ export interface LoginResponse {
   is_verified: boolean;
   created_at: Date;
 }
+export interface LoginRequest{
+  email:string,
+  password:string
+}
