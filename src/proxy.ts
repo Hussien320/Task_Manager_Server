@@ -1,6 +1,7 @@
 // src/proxy.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from './services/AuthService';
+import { hasPermission, PERMISSION, ROLE } from './types/Roles';
 import {
   AuthenticationException,
   ExpiredTokenException,
@@ -30,8 +31,37 @@ const publicPages = [
   '/register',
   '/forgot-password',
   '/reset-password',
-    '/logout'
+    '/logout',
+     '/unauthorized'
 ];
+
+function isPathUnder(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+function canAccessPage(pathname: string, userRole: ROLE) {
+  if (isPathUnder(pathname, '/dashboard')) {
+    return userRole === ROLE.ADMIN;
+  }
+
+  if (isPathUnder(pathname, '/settings')) {
+    return hasPermission(userRole, PERMISSION.READ_APP_SETTINGS);
+  }
+
+  if (isPathUnder(pathname, '/suppliers')) {
+    return hasPermission(userRole, PERMISSION.READ_ALL_SUPPLIERS);
+  }
+
+  if (isPathUnder(pathname, '/products') || isPathUnder(pathname, '/product')) {
+    return hasPermission(userRole, PERMISSION.READ_PRODUCT);
+  }
+
+  return true;
+}
+
+function redirectToUnauthorized(req: NextRequest) {
+  return NextResponse.redirect(new URL('/unauthorized', req.url));
+}
 
 // ============================================
 // MAIN MIDDLEWARE
@@ -80,6 +110,10 @@ export async function proxy(req: NextRequest) {
       try {
         const payload = await authService.validateAccessToken(authToken);
 
+        if (!isApiRoute && !canAccessPage(currentPath, payload.userRole)) {
+          return redirectToUnauthorized(req);
+        }
+
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set('x-user-id', payload.userId);
         requestHeaders.set('x-user-role', payload.userRole);
@@ -111,6 +145,10 @@ export async function proxy(req: NextRequest) {
         authService.setRefreshCookie(response, newRefreshToken);
 
         const payload = authService.validateAccessToken(newAccessToken);
+
+        if (!isApiRoute && !canAccessPage(currentPath, payload.userRole)) {
+          return redirectToUnauthorized(req);
+        }
 
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set('x-user-id', payload.userId);
@@ -192,6 +230,7 @@ export const config = {
   matcher: [
     '/api/:path*',
     '/dashboard/:path*',
+    '/product/:path*',
     '/products/:path*',
     '/suppliers/:path*',
     '/settings/:path*',

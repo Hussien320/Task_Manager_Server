@@ -6,9 +6,15 @@ export interface LoginResponse {
   email: string;
   role: UserRole;
   is_verified: boolean;
-  created_at: Date;
+  created_at: string;
 }
 export interface LoginRequest{
   email:string,
   password:string
 }
+
+ export interface VerifyResetRequest  {
+  email: string;
+  token: string;
+  password: string;
+};

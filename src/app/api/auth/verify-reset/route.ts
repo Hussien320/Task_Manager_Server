@@ -41,8 +41,13 @@ export async function POST(request:NextRequest) {
            const hashed=await bcrypt.hash(data.password,10);
             await userService.updatePassword(data.email,hashed);
                 logger.info(`Password updated successfully for email: ${data.email}`);
-    return NextResponse.json({ message: 'Password updated successfully' },{status:200});
-
+   return NextResponse.json(
+  {
+    success: true,
+    message: 'Password updated successfully',
+  },
+  { status: 200 }
+);
     }
     catch(error){
         return handleRouteError(error, { operation: 'verify_reset',
