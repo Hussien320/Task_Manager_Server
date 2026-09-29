@@ -2,11 +2,12 @@
 import { api } from "@/lib/api"
 import { ApiException } from "@/utils/exceptions/ApiException"
 import { useRouter } from "next/navigation"
-import {  useState } from "react"
+import {  useEffect, useState } from "react"
 import Input from "./ui/Input"
 import { Mail ,Lock} from "lucide-react"
 import Button from "./ui/Button"
 import FormError from "./ui/FormError"
+import { LoginResponse } from "@/types/User"
 
 function LoginForm(){
  //step1 define the usestates
@@ -14,6 +15,7 @@ function LoginForm(){
  const [password,setPassword]=useState('')
  const [error,setError]=useState<string |null>(null)
  const[loading,setLoading]=useState(false)
+
   const router = useRouter();
  async function handelLogin(e:React.SyntheticEvent<HTMLFormElement>){
     e.preventDefault()
@@ -25,9 +27,16 @@ function LoginForm(){
     }
       setLoading(true);
     try{
-        await api.auth.login({email:email,password:password});
-        router.push('/dashboard')
-        router.refresh()
+        const response=await api.auth.login({email:email,password:password});
+        if(response.data.role=='ADMIN'){
+            router.push('/dashboard')
+        }
+        else{
+
+            
+        router.push('/product')
+        }
+    
 
 
     }
@@ -45,6 +54,7 @@ function LoginForm(){
     }
 
  }
+
     return(
         <form onSubmit={handelLogin} className="space-y-4">
             <Input
@@ -64,6 +74,7 @@ function LoginForm(){
             value={password}
             onChange={(e)=>setPassword(e.target.value)}
             disabled={loading}
+            togglePassword
             />
              {error && <FormError message={error} />}
 

@@ -42,5 +42,16 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(credentials),
       }),
+       forgetpass:(email:string)=>
+    request<{
+      success:true,
+     message:string,
+      data:string
+    }>('/api/auth/forgot-password',{
+      method:'POST',
+      body:JSON.stringify({ email })
+    })
+  
   },
+ 
 };
