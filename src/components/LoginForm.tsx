@@ -34,7 +34,7 @@ function LoginForm(){
         else{
 
             
-        router.push('/product')
+        router.push('/products')
         }
     
 
