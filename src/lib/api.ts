@@ -1,7 +1,10 @@
 import { LoginRequest, LoginResponse, VerifyResetRequest } from "@/types/User";
 import { ApiException } from "@/utils/exceptions/ApiException";
 
-
+function cleanErrorMessage(rawMessage: string): string {
+  // Strip any "SomethingException: " prefix
+  return rawMessage.replace(/^[A-Za-z]+Exception:\s*/, '');
+}
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -18,8 +21,10 @@ async function request<T>(
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+      const rawMessage = data.message || `Request failed (${res.status})`;
+    const cleanMessage = cleanErrorMessage(rawMessage);
     throw new ApiException(
-      data.message || `Request failed (${res.status})`,
+       cleanMessage,
       res.status,
       data.errorType,
       data.errors
