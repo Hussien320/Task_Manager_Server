@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import logger from "@/utils/logger";
 import { loginSchema } from "@/schemaValidations/schema";
 
-import { LoginResponse } from "@/types/User";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { handleRouteError } from "@/utils/handleRouteError";
 
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
     //update logegd user
     const updatedUser=  await userService.updateVerifiedUser(user.email);
 
-        const loginResponse: LoginResponse = {
+        const loginResponse = {
       id: updatedUser.id,
       username: updatedUser.username,
       email: updatedUser.email,

@@ -27,8 +27,15 @@ export class EmailService {
 
   async sendResetPasswordEmail(to: string, resetCode: string) {
     const subject = 'Password Reset Request';
-    const html = this.getResetPasswordHtml(resetCode);
-    const text = `Your password reset code is: ${resetCode}. It will expire in 15 minutes.`;
+    const resetUrl = new URL(
+      '/reset-password',
+      process.env.FRONTEND_URL || 'http://localhost:3000'
+    );
+    resetUrl.searchParams.set('email', to);
+    resetUrl.searchParams.set('token', resetCode);
+    const resetLink = resetUrl.toString();
+    const html = this.getResetPasswordHtml(resetCode, resetLink);
+    const text = `Use this link to reset your password: ${resetLink}\n\nYour password reset code is: ${resetCode}. It will expire in 15 minutes.`;
 
     const mailOptions = {
       from: process.env.FROM_EMAIL,
@@ -489,7 +496,8 @@ private getExpiryAlertHtml(products: Array<{
   }
 
 
-  private getResetPasswordHtml(code: string): string {
+  private getResetPasswordHtml(code: string, resetLink: string): string {
+    const htmlResetLink = resetLink.replace(/&/g, '&amp;');
     return `
       <!DOCTYPE html>
       <html>
@@ -547,6 +555,16 @@ private getExpiryAlertHtml(products: Array<{
               color: #dc2626;
               font-weight: 600;
             }
+            .button {
+              display: inline-block;
+              margin: 20px 0;
+              padding: 12px 24px;
+              border-radius: 6px;
+              background-color: #0891b2;
+              color: #ffffff;
+              font-weight: 600;
+              text-decoration: none;
+            }
           </style>
         </head>
         <body>
@@ -558,6 +576,8 @@ private getExpiryAlertHtml(products: Array<{
               <p>Hello,</p>
               <p>We received a request to reset your password. Use the code below to complete the process:</p>
               <div class="code-box">${code}</div>
+              <p>Or continue directly to the reset form:</p>
+              <p><a class="button" href="${htmlResetLink}">Reset your password</a></p>
               <p>This code will expire in <span class="expiry">15 minutes</span>.</p>
               <p>If you didn't request a password reset, you can safely ignore this email.</p>
             </div>

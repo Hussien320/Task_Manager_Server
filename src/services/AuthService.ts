@@ -27,13 +27,29 @@ export class AuthService{
         }
         return AuthService.instance;
     }
- generateAccessToken(payload:UserPayload):string{
-       return jwt.sign(payload,this.accessSecret,{expiresIn:this.expiration});
-    }
-    generateRefreshToken(payload:UserPayload):string{
-        return jwt.sign(payload,this.refreshSecret,{expiresIn:this.refreshExpiration});
 
-    }
+ generateAccessToken(payload: UserPayload): string {
+  // ✅ Build clean payload
+  const cleanPayload: UserPayload = {
+    userId: payload.userId,
+    userRole: payload.userRole,
+  };
+
+  return jwt.sign(cleanPayload, this.accessSecret, {
+    expiresIn: this.expiration,
+  });
+}
+
+    generateRefreshToken(payload: UserPayload): string {
+  const cleanPayload: UserPayload = {
+    userId: payload.userId,
+    userRole: payload.userRole,
+  };
+
+  return jwt.sign(cleanPayload, this.refreshSecret, {
+    expiresIn: this.refreshExpiration,
+  });
+}
     generateResetToken():{code:string,expiresAt:Date}{
           // Generate 6-digit code
     const min = 100000;
@@ -46,23 +62,40 @@ export class AuthService{
     return { code, expiresAt };
 
     }
-    validateAccessToken(token:string):UserPayload{
-        try{
-               return  jwt.verify(token,this.accessSecret) as UserPayload;
-        }
-        catch{
-            logger.error('Invalid token');
-            throw new AuthenticationException('invalid acces token');
-        }
-    }
-    validateRefreshToken(token:string):UserPayload{
-        try{
-             return jwt.verify(token,this.refreshSecret) as UserPayload;
-        }
-        catch{
-            throw new InvalidTokenException();
-        }
-    }
+  
+validateAccessToken(token: string): UserPayload {
+  try {
+    const decoded = jwt.verify(token, this.accessSecret) as UserPayload & {
+      iat?: number;
+      exp?: number;
+    };
+
+    // ✅ Return clean
+    return {
+      userId: decoded.userId,
+      userRole: decoded.userRole,
+    };
+  } catch {
+    logger.error('Invalid token');
+    throw new AuthenticationException('invalid access token');
+  }
+}
+ 
+    validateRefreshToken(token: string): UserPayload {
+  try {
+    const decoded = jwt.verify(token, this.refreshSecret) as UserPayload & {
+      iat?: number;
+      exp?: number;
+    };
+
+    return {
+      userId: decoded.userId,
+      userRole: decoded.userRole,
+    };
+  } catch {
+    throw new InvalidTokenException();
+  }
+}
 
     setAccessCookie(res:NextResponse,token:string){
         res.cookies.set(
