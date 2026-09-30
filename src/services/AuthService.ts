@@ -27,9 +27,7 @@ export class AuthService{
         }
         return AuthService.instance;
     }
- //generateAccessToken(payload:UserPayload):string{
- //      return jwt.sign(payload,this.accessSecret,{expiresIn:this.expiration});
- //}
+
  generateAccessToken(payload: UserPayload): string {
   // ✅ Build clean payload
   const cleanPayload: UserPayload = {
@@ -41,10 +39,7 @@ export class AuthService{
     expiresIn: this.expiration,
   });
 }
- ////   generateRefreshToken(payload:UserPayload):string{
-     //   return jwt.sign(payload,this.refreshSecret,{expiresIn:this.refreshExpiration});
 
-    //}
     generateRefreshToken(payload: UserPayload): string {
   const cleanPayload: UserPayload = {
     userId: payload.userId,
@@ -67,15 +62,7 @@ export class AuthService{
     return { code, expiresAt };
 
     }
-    //validateAccessToken(token:string):UserPayload{
-      //  try{
-        //       return  jwt.verify(token,this.accessSecret) as UserPayload;
-       // }
-        //catch{
-         //   logger.error('Invalid token');
-    //        throw new AuthenticationException('invalid acces token');
-        //}
-   // }
+  
 validateAccessToken(token: string): UserPayload {
   try {
     const decoded = jwt.verify(token, this.accessSecret) as UserPayload & {
@@ -93,14 +80,7 @@ validateAccessToken(token: string): UserPayload {
     throw new AuthenticationException('invalid access token');
   }
 }
- //   validateRefreshToken(token:string):UserPayload{
-   //     try{
-     //        return jwt.verify(token,this.refreshSecret) as UserPayload;
-       // }
-        //catch{
-          //  throw new InvalidTokenException();
-       // }
-    //}
+ 
     validateRefreshToken(token: string): UserPayload {
   try {
     const decoded = jwt.verify(token, this.refreshSecret) as UserPayload & {

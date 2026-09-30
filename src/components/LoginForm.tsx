@@ -28,7 +28,7 @@ function LoginForm(){
       setLoading(true);
     try{
         const response=await api.auth.login({email:email,password:password});
-        if(response.data.role=='ADMIN'){
+        if(response.data.role==='ADMIN'){
             router.push('/dashboard')
         }
         else{

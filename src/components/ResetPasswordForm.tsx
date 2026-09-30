@@ -25,7 +25,7 @@ export default function ResetPasswordForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
@@ -59,7 +59,7 @@ export default function ResetPasswordForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-1">
+    <form onSubmit={handleReset} className="space-y-1">
       <label htmlFor="reset-email" className="mb-2 block text-sm text-gray-300">
         Email address
       </label>
