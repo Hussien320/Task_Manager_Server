@@ -23,7 +23,7 @@ export class ProductService{
         return ProductService.instance;
     }
     
-    async createProduct(userid:string ,data:{supplier_name:string,name:string,category:ProductType,quantity:number,price:number, expiry_date?:Date}):Promise<ProductResponse>{
+    async createProduct(userid:string ,data:{supplier_name:string,name:string,category:ProductType,quantity:number,price:number, expiry_date?:Date | null}):Promise<ProductResponse>{
         try{
             //check if if category is perishabel
                let expiry_date: Date | null = null;
@@ -49,6 +49,11 @@ export class ProductService{
                 logger.error('supplier should be active');
                 throw new BadRequestException('supplier is invalid');
 
+            }
+            //check if the selected supplier can supply the selected product type
+            if(targetsupplier.product_type!==data.category){
+                logger.error('supplier cannot supply the selected product type');
+                throw new BadRequestException('supplier cannot supply the selected product type');
             }
             //extract the thershold from the app setting
             const threshold=await appsettingRepo.getSettingvalue(data.category);

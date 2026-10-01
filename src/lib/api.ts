@@ -1,3 +1,5 @@
+import { CreateProductRequest,ProductResponse } from "@/types/Product";
+import { SupplierListResponse } from "@/types/Supplier";
 import { LoginRequest, LoginResponse, VerifyResetRequest } from "@/types/User";
 import { ApiException } from "@/utils/exceptions/ApiException";
 
@@ -65,5 +67,28 @@ export const api = {
   }),
   
   },
+  products:{
+    add:(credentials:CreateProductRequest)=>
+    request<{
+      success: true;
+      message: string;
+      data: ProductResponse;
+    }>('/api/products',{
+      method:'POST',
+      body:JSON.stringify(credentials)
+    }),
+  },
+  suppliers:{
+    getactive:()=>
+      request<{
+        success: true;
+        message: string;
+        data:SupplierListResponse;
+      }>('/api/suppliers/active_suppliers',{
+        method:'GET'
+      })
+
+
+  }
  
 };

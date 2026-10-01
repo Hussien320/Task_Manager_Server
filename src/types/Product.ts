@@ -7,12 +7,21 @@ name:string,
 quantity:number,
 price:number,
 category:ProductType,
-expiry_date:Date | null,
+expiry_date:Date| null,
 low_stock_threshold:number,
 supplier_id:string
 suppliername?:string
 
 
+}
+export interface CreateProductRequest{
+    name:string,
+    supplier_name:string,
+    quantity:number,
+    price:number,
+    category:ProductType,
+    expiry_date:Date | null,
+  
 }
 export interface ProductListResponse{
  
@@ -48,7 +57,7 @@ export function toProductResponse(product:Product,suppliername?:string):ProductR
         quantity:product.quantity,
         price:Number(product.price),
         category:product.category,
-        expiry_date:product.expiry_date,
+        expiry_date:product.expiry_date|| null,
         low_stock_threshold:product.low_stock_threshold,
         supplier_id:product.supplier_id,
         suppliername:suppliername
