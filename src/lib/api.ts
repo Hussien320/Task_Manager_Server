@@ -50,7 +50,14 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(credentials),
       }),
-       forgetpass:(email:string)=>
+    logout: () =>
+      request<{
+        success: true;
+        message: string;
+      }>('/api/auth/logout', {
+        method: 'POST',
+      }),
+    forgetpass:(email:string)=>
     request<{
       message: string;
     }>('/api/auth/forgot-password',{
