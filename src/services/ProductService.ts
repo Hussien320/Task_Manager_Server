@@ -207,7 +207,7 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
         }
         return toExpiringProductResponseArray(expiringProducts);
     }
-    async reloadProduct(id:string,quantity:number):Promise<ProductResponse>{
+        async reloadProduct(userid:string,id:string,quantity:number):Promise<ProductResponse>{
       const targetproduct=await productRepo.getProductById(id);
       if(!targetproduct){
         logger.error('product not found');
@@ -215,6 +215,8 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
       }
       const updatedquantity=targetproduct.quantity+quantity;
       const updatedproduct=await productRepo.updateProductquantity(targetproduct.id,updatedquantity);
+    const logged=await inventoryRepo.updateInventory({userid:userid,productid:updatedproduct.id,transactiontype:TransactionType.RELOAD,quantity_changed:quantity,unit_price_at_time:Number(updatedproduct.price)});
+    logger.info(`${logged.transaction_type} about ${logged.quantity_changed} ,price:${logged.unit_price_at_time} at ${logged.logged_at}`);
       return toProductResponse(updatedproduct);  
       
     }

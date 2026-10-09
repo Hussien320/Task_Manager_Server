@@ -2,6 +2,7 @@ import { NextRequest ,NextResponse} from 'next/server';
    import handleRouteError from '@/utils/handleRouteError';
 import { PERMISSION } from '@/types/Roles';
 import { authGuard } from '@/lib/auth/guard';
+import { getUserIdFromRequest } from '@/lib/auth/requestHelper';
 import { BadRequestException } from '@/utils/exceptions/http/BadRequestException';
 import { updateProductquantitySchema } from '@/schemaValidations/schema';
 import { productservice } from '@/services/ProductService';
@@ -23,7 +24,8 @@ export async function PUT(request: NextRequest,{params}:{params:Promise<{id:stri
             throw new BadRequestException("Bad request: invalid product quantity");
         }
         const {quantity}=parssed.data;
-        const mappedresponse=await productservice.reloadProduct(id,quantity);
+        const user_id=getUserIdFromRequest(request);
+        const mappedresponse=await productservice.reloadProduct(user_id as string,id,quantity);
         return NextResponse.json({
             success:true,
             message:"Product reloaded successfully",
