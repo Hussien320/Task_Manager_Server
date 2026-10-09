@@ -150,6 +150,26 @@ export class ProductService{
         throw new DBException('Error getting products', error as Error);
     }
 }
+
+    async getProductByName(name: string): Promise<ProductResponse> {
+        try {
+            const targetproduct = await productRepo.getProductByName(name);
+            if (!targetproduct) {
+                logger.error('product not found');
+                throw new ItemNotFoundException('product not found');
+            }
+
+            const supplier = await supplierRepo.getSupplierById(targetproduct.supplier_id);
+            return toProductResponse(targetproduct, supplier?.name);
+        } catch (error) {
+            if (error instanceof ItemNotFoundException) {
+                throw error;
+            }
+            logger.error('Error getting product by name', error);
+            throw new DBException('Error getting product by name', error as Error);
+        }
+    }
+
 async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
     
         const history=await productRepo.getProductHistory(id);

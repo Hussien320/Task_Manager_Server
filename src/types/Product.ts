@@ -23,6 +23,10 @@ export interface CreateProductRequest{
     expiry_date:Date | null,
   
 }
+export interface WithdrawProductRequest{
+    name:string,
+    quantity:number,
+}
 export interface ProductListResponse{
  
     products: ProductResponse[];
