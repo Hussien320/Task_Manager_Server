@@ -23,6 +23,7 @@ function ProductForm() {
   // ═══ UI STATE ═══
   const [suppliers, setSuppliers] = useState<SupplierResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingSuppliers, setLoadingSuppliers] = useState(true);
 
@@ -50,6 +51,7 @@ function ProductForm() {
   async function handleCreateProduct(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     // Validation
     if (!name || !quantity || !price || !category || !supplierName) {
@@ -60,15 +62,16 @@ function ProductForm() {
     setLoading(true);
 
     try {
-      await api.products.add({
+      const response = await api.products.add({
         name,
         quantity,
         price,
         category,
         expiry_date: expiryDate ? new Date(expiryDate) : null,
-       
         supplier_name: supplierName,
       });
+
+      setSuccess(`${response.data.name} added successfully. Current stock: ${response.data.quantity}`);
 
       // Reset form
       setName('');
@@ -76,7 +79,6 @@ function ProductForm() {
       setPrice(0);
       setCategory(ProductType.PLASTIC);
       setExpiryDate('');
-      setLowStockThreshold(0);
       setSupplierName('');
     } catch (err) {
       if (err instanceof ApiException) {
@@ -177,6 +179,7 @@ function ProductForm() {
 
       {/* Error */}
       {error && <FormError message={error} />}
+      {success && <p role="status" className="text-sm text-green-400">{success}</p>}
 
       {/* Submit */}
       <Button type="submit" fullWidth isLoading={loading}>

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
-    const productName = searchParams.get("nme") ?? searchParams.get("name");
+    const productName =  searchParams.get("name");
 
     if (!productName || !productName.trim()) {
       throw new BadRequestException("Product name query parameter is required");
