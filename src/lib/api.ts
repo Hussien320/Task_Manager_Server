@@ -1,3 +1,5 @@
+import { CreateProductRequest,ProductResponse, WithdrawProductRequest } from "@/types/Product";
+import { SupplierListResponse } from "@/types/Supplier";
 import { LoginRequest, LoginResponse, VerifyResetRequest } from "@/types/User";
 import { ApiException } from "@/utils/exceptions/ApiException";
 
@@ -48,7 +50,14 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(credentials),
       }),
-       forgetpass:(email:string)=>
+    logout: () =>
+      request<{
+        success: true;
+        message: string;
+      }>('/api/auth/logout', {
+        method: 'POST',
+      }),
+    forgetpass:(email:string)=>
     request<{
       message: string;
     }>('/api/auth/forgot-password',{
@@ -65,5 +74,54 @@ export const api = {
   }),
   
   },
+  products:{
+    add:(credentials:CreateProductRequest)=>
+    request<{
+      success: true;
+      message: string;
+      data: ProductResponse;
+    }>('/api/products',{
+      method:'POST',
+      body:JSON.stringify(credentials)
+    }),
+    withdraw:(credentials:WithdrawProductRequest)=>
+    request<{
+      success: true;
+      message: string;
+      data:ProductResponse;
+    }>('/api/products/withdraw',{
+      method:'POST',
+      body:JSON.stringify(credentials)
+    }),
+    getByName: (name: string) =>
+    request<{
+      success: true;
+      data: ProductResponse;
+    }>(`/api/products/by-name?name=${encodeURIComponent(name)}`, {
+      method: 'GET',
+    }),
+    reload:(id:string, quantity:number)=>
+    request<{
+      success: true;
+      message: string;
+      data:ProductResponse;
+    }>(`/api/products/${id}/reload`,{
+      method:'PUT',
+      body:JSON.stringify({ quantity })
+    }),
+   
+  },
+  suppliers:{
+    getactive:()=>
+      request<{
+        success: true;
+        message: string;
+        data:SupplierListResponse;
+      }>('/api/suppliers/active_suppliers',{
+        method:'GET'
+      })
+
+
+  }
  
 };

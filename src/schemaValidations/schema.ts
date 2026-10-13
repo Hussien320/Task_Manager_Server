@@ -123,7 +123,9 @@ price: z
         (date) => date > new Date(),
         { message: "Expiry date must be in the future" }
     )
+    .nullable()
     .optional(),
+   
 
   });
   export const withdrawProductSchema=z.object({

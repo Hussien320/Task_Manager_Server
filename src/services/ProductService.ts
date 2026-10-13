@@ -23,7 +23,7 @@ export class ProductService{
         return ProductService.instance;
     }
     
-    async createProduct(userid:string ,data:{supplier_name:string,name:string,category:ProductType,quantity:number,price:number, expiry_date?:Date}):Promise<ProductResponse>{
+    async createProduct(userid:string ,data:{supplier_name:string,name:string,category:ProductType,quantity:number,price:number, expiry_date?:Date | null}):Promise<ProductResponse>{
         try{
             //check if if category is perishabel
                let expiry_date: Date | null = null;
@@ -49,6 +49,11 @@ export class ProductService{
                 logger.error('supplier should be active');
                 throw new BadRequestException('supplier is invalid');
 
+            }
+            //check if the selected supplier can supply the selected product type
+            if(targetsupplier.product_type!==data.category){
+                logger.error('supplier cannot supply the selected product type');
+                throw new BadRequestException('supplier cannot supply the selected product type');
             }
             //extract the thershold from the app setting
             const threshold=await appsettingRepo.getSettingvalue(data.category);
@@ -145,6 +150,26 @@ export class ProductService{
         throw new DBException('Error getting products', error as Error);
     }
 }
+
+    async getProductByName(name: string): Promise<ProductResponse> {
+        try {
+            const targetproduct = await productRepo.getProductByName(name);
+            if (!targetproduct) {
+                logger.error('product not found');
+                throw new ItemNotFoundException('product not found');
+            }
+
+            const supplier = await supplierRepo.getSupplierById(targetproduct.supplier_id);
+            return toProductResponse(targetproduct, supplier?.name);
+        } catch (error) {
+            if (error instanceof ItemNotFoundException) {
+                throw error;
+            }
+            logger.error('Error getting product by name', error);
+            throw new DBException('Error getting product by name', error as Error);
+        }
+    }
+
 async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
     
         const history=await productRepo.getProductHistory(id);
@@ -182,7 +207,7 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
         }
         return toExpiringProductResponseArray(expiringProducts);
     }
-    async reloadProduct(id:string,quantity:number):Promise<ProductResponse>{
+        async reloadProduct(userid:string,id:string,quantity:number):Promise<ProductResponse>{
       const targetproduct=await productRepo.getProductById(id);
       if(!targetproduct){
         logger.error('product not found');
@@ -190,6 +215,8 @@ async GetproductHistory(id:string):Promise< ProductHistoryResponse>{
       }
       const updatedquantity=targetproduct.quantity+quantity;
       const updatedproduct=await productRepo.updateProductquantity(targetproduct.id,updatedquantity);
+    const logged=await inventoryRepo.updateInventory({userid:userid,productid:updatedproduct.id,transactiontype:TransactionType.RELOAD,quantity_changed:quantity,unit_price_at_time:Number(updatedproduct.price)});
+    logger.info(`${logged.transaction_type} about ${logged.quantity_changed} ,price:${logged.unit_price_at_time} at ${logged.logged_at}`);
       return toProductResponse(updatedproduct);  
       
     }

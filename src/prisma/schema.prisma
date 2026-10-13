@@ -25,6 +25,7 @@ enum ProductType {
 enum TransactionType {
   ADDITION
   WITHDRAWAL
+  RELOAD
 }
 
 model User {

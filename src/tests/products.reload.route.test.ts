@@ -29,8 +29,9 @@ jest.mock("@/utils/logger", () => ({
 const mockedGuard = authGuard as jest.MockedFunction<typeof authGuard>;
 const mockedProductService = productservice as jest.Mocked<typeof productservice>;
 
-function makeRequest(body: unknown, { invalidJson = false } = {}): NextRequest {
+function makeRequest(body: unknown, { invalidJson = false, userId = "user-123" } = {}): NextRequest {
   const headers = new Headers();
+  headers.set("x-user-id", userId);
   headers.set("x-user-role", ROLE.ADMIN);
 
   return {
@@ -83,7 +84,7 @@ describe("PUT /api/products/[id]/reload", () => {
   it("passes the awaited route id and validated quantity to the service", async () => {
     await PUT(makeRequest({ quantity: 10 }), makeContext("prod-1"));
 
-    expect(mockedProductService.reloadProduct).toHaveBeenCalledWith("prod-1", 10);
+    expect(mockedProductService.reloadProduct).toHaveBeenCalledWith("user-123", "prod-1", 10);
   });
 
   it("returns the guard response without reading the body", async () => {

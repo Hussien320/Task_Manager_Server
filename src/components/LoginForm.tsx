@@ -2,12 +2,12 @@
 import { api } from "@/lib/api"
 import { ApiException } from "@/utils/exceptions/ApiException"
 import { useRouter } from "next/navigation"
-import {  useEffect, useState } from "react"
+import {   useState } from "react"
 import Input from "./ui/Input"
 import { Mail ,Lock} from "lucide-react"
 import Button from "./ui/Button"
 import FormError from "./ui/FormError"
-import { LoginResponse } from "@/types/User"
+
 
 function LoginForm(){
  //step1 define the usestates

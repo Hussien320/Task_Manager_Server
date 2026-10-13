@@ -211,10 +211,10 @@ async getProductHistory(productid:string):Promise<any>{
  async GetExpiringProducts(expiryThreshold: number): Promise<Product[] > {
     try{
       const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     
     const alertDate = new Date(today);
-    alertDate.setDate(today.getDate() + expiryThreshold);
+    alertDate.setUTCDate(today.getUTCDate() + expiryThreshold);
      const products = await prisma.product.findMany({
       where: {
         expiry_date: {
