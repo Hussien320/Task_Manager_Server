@@ -11,6 +11,11 @@ export interface SupplierListResponse{
     suppliers: SupplierResponse[];
     total: number;
 }
+export interface SupplierRequest{
+    name:string,
+    product_type:ProductType
+}
+
 
 
 export  function toSupplierResponse(supplier: Supplier): SupplierResponse {

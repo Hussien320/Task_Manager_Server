@@ -1,5 +1,5 @@
 import { CreateProductRequest,ProductResponse, WithdrawProductRequest } from "@/types/Product";
-import { SupplierListResponse } from "@/types/Supplier";
+import { SupplierListResponse, SupplierRequest,  SupplierResponse } from "@/types/Supplier";
 import { LoginRequest, LoginResponse, VerifyResetRequest } from "@/types/User";
 import { ApiException } from "@/utils/exceptions/ApiException";
 
@@ -119,7 +119,29 @@ export const api = {
         data:SupplierListResponse;
       }>('/api/suppliers/active_suppliers',{
         method:'GET'
-      })
+      }),
+      getAll: () =>
+      request<{
+        success: true;
+        message: string;
+        data:SupplierListResponse;
+      }>('/api/suppliers',{
+        method:'GET'
+      }),
+      add:(credentials:SupplierRequest)=>
+        request<{
+          success:true,
+          message:string,
+          data:SupplierResponse
+
+        }>('/api/suppliers',{method:'POST', body: JSON.stringify(credentials)}),
+      inactivate:(id:string)=>
+        request<{
+        
+        }>(`/api/suppliers/${id}`,{
+          method:'PUT',
+        
+        }),
 
 
   }
