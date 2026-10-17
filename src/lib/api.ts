@@ -142,6 +142,11 @@ export const api = {
           method:'PUT',
         
         }),
+        activate:(id:string,is_active:boolean)=>
+          request<{message:string,success:true,data:SupplierResponse}>(`/api/suppliers/${id}`,{
+            method:'PATCH',
+            body:JSON.stringify({is_active})
+          })
 
 
   }

@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import SupplierForm from "@/components/SupplierForm";
 import type { SupplierResponse } from "@/types/Supplier";
 import { ApiException } from "@/utils/exceptions/ApiException";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function SupplierTable() {
@@ -13,12 +13,12 @@ export default function SupplierTable() {
   const [error, setError] = useState<string | null>(null);
   const [showSupplierForm, setShowSupplierForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [inactivatingSupplierId, setInactivatingSupplierId] = useState<string | null>(null);
+  const [updatingSupplierId, setUpdatingSupplierId] = useState<string | null>(null);
   const supplierDialogRef = useRef<HTMLDialogElement>(null);
 
   async function handleInactivateSupplier(supplier: SupplierResponse) {
     setError(null);
-    setInactivatingSupplierId(supplier.id);
+    setUpdatingSupplierId(supplier.id);
 
     try {
       await api.suppliers.inactivate(supplier.id);
@@ -36,7 +36,29 @@ export default function SupplierTable() {
           : `Failed to inactivate ${supplier.name}`
       );
     } finally {
-      setInactivatingSupplierId(null);
+      setUpdatingSupplierId(null);
+    }
+  }
+
+  async function handleActivateSupplier(supplier: SupplierResponse) {
+    setError(null);
+    setUpdatingSupplierId(supplier.id);
+
+    try {
+      const response = await api.suppliers.activate(supplier.id, true);
+      setSuppliers((currentSuppliers) =>
+        currentSuppliers.map((currentSupplier) =>
+          currentSupplier.id === supplier.id ? response.data : currentSupplier
+        )
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiException
+          ? err.message
+          : `Failed to activate ${supplier.name}`
+      );
+    } finally {
+      setUpdatingSupplierId(null);
     }
   }
 
@@ -141,11 +163,23 @@ export default function SupplierTable() {
                         type="button"
                         aria-label={`Inactivate ${supplier.name}`}
                         title={`Inactivate ${supplier.name}`}
-                        disabled={inactivatingSupplierId !== null}
+                        disabled={updatingSupplierId !== null}
                         onClick={() => handleInactivateSupplier(supplier)}
                         className="inline-flex size-9 items-center justify-center rounded-lg text-red-400 transition hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Trash2 aria-hidden="true" className="size-4" />
+                      </button>
+                    )}
+                    {!supplier.is_active && (
+                      <button
+                        type="button"
+                        aria-label={`Activate ${supplier.name}`}
+                        title={`Activate ${supplier.name}`}
+                        disabled={updatingSupplierId !== null}
+                        onClick={() => handleActivateSupplier(supplier)}
+                        className="inline-flex size-9 items-center justify-center rounded-lg text-green-400 transition hover:bg-green-500/10 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <RotateCcw aria-hidden="true" className="size-4" />
                       </button>
                     )}
                   </td>
