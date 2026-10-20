@@ -1,6 +1,6 @@
 import { CreateProductRequest,ProductResponse, WithdrawProductRequest } from "@/types/Product";
-import { SupplierListResponse } from "@/types/Supplier";
-import { LoginRequest, LoginResponse, VerifyResetRequest } from "@/types/User";
+import { SupplierListResponse, SupplierRequest,  SupplierResponse } from "@/types/Supplier";
+import { LoginRequest, LoginResponse, UserResponse, VerifyResetRequest } from "@/types/User";
 import { ApiException } from "@/utils/exceptions/ApiException";
 
 function cleanErrorMessage(rawMessage: string): string {
@@ -119,9 +119,48 @@ export const api = {
         data:SupplierListResponse;
       }>('/api/suppliers/active_suppliers',{
         method:'GET'
-      })
+      }),
+      getAll: () =>
+      request<{
+        success: true;
+        message: string;
+        data:SupplierListResponse;
+      }>('/api/suppliers',{
+        method:'GET'
+      }),
+      add:(credentials:SupplierRequest)=>
+        request<{
+          success:true,
+          message:string,
+          data:SupplierResponse
+
+        }>('/api/suppliers',{method:'POST', body: JSON.stringify(credentials)}),
+      inactivate:(id:string)=>
+        request<{
+        
+        }>(`/api/suppliers/${id}`,{
+          method:'PUT',
+        
+        }),
+        activate:(id:string,is_active:boolean)=>
+          request<{message:string,success:true,data:SupplierResponse}>(`/api/suppliers/${id}`,{
+            method:'PATCH',
+            body:JSON.stringify({is_active})
+          })
 
 
-  }
+  },
+  users: {
+    getAll: () =>
+      request<{
+        success: true;
+        data: UserResponse[];
+        meta: {
+          total: number;
+        };
+      }>('/api/users', {
+        method: 'GET',
+      }),
+  },
  
 };

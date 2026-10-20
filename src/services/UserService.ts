@@ -4,6 +4,7 @@ import logger from "@/utils/logger";
 import { ItemNotFoundException } from "@/utils/exceptions/RepoException";
 import { BadRequestException } from "@/utils/exceptions/http/BadRequestException";
 import { User } from "@/app/generated/prisma/browser";
+import { toUserListResponse, UserListResponse } from "@/types/User";
 
 
 
@@ -42,9 +43,19 @@ export class UserService {
       }
       return user;
    }
+   async getAllUsers():Promise<UserListResponse>
+   {
+      const users=await userRepo.GetAllUsers();
+      if(!users || users.length===0){
+         throw new ItemNotFoundException('No users found');
+      }
+      const mappedResponse=toUserListResponse(users);
+      return mappedResponse;
+   }
    async updatePassword(email:string,pass:string){
       await userRepo.updateUserPassword(email,pass);
    }
+
   
 }
 
