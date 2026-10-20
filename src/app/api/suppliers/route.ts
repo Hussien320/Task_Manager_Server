@@ -25,7 +25,7 @@ export async function GET(request:NextRequest){
             meta:{
                 total:suppliers.total
             }
-        })
+        }, {status:200})
     }
     catch(error){
         return handleRouteError(error, {

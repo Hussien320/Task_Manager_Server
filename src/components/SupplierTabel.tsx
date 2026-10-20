@@ -38,7 +38,7 @@ export default function SupplierTable() {
     } finally {
       setUpdatingSupplierId(null);
     }
-  }
+  } 
 
   async function handleActivateSupplier(supplier: SupplierResponse) {
     setError(null);

@@ -1,6 +1,6 @@
 import { CreateProductRequest,ProductResponse, WithdrawProductRequest } from "@/types/Product";
 import { SupplierListResponse, SupplierRequest,  SupplierResponse } from "@/types/Supplier";
-import { LoginRequest, LoginResponse, VerifyResetRequest } from "@/types/User";
+import { LoginRequest, LoginResponse, UserResponse, VerifyResetRequest } from "@/types/User";
 import { ApiException } from "@/utils/exceptions/ApiException";
 
 function cleanErrorMessage(rawMessage: string): string {
@@ -149,6 +149,18 @@ export const api = {
           })
 
 
-  }
+  },
+  users: {
+    getAll: () =>
+      request<{
+        success: true;
+        data: UserResponse[];
+        meta: {
+          total: number;
+        };
+      }>('/api/users', {
+        method: 'GET',
+      }),
+  },
  
 };

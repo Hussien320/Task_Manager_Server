@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Boxes, History, Settings2, Truck } from 'lucide-react';
+import { Boxes, History, Settings2, Truck, Users } from 'lucide-react';
 
 const navigationItems = [
+  { label: 'Users', href: '/dashboard', Icon: Users },
   { label: 'Products', href: '/products', Icon: Boxes },
   { label: 'Suppliers', href: '/suppliers', Icon: Truck },
   { label: 'History Log', href: '/history', Icon: History },

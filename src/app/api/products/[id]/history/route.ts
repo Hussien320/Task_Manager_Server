@@ -13,7 +13,7 @@ export async function GET(request:NextRequest,{ params }: { params: Promise<{ id
         return NextResponse.json({
             success:true,
             data:response
-        })
+        },{status:200})
 
 
     }

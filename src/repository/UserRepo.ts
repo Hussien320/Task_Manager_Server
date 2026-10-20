@@ -146,6 +146,15 @@ export  class UserRepo{
             }
         })
         }
+    async GetAllUsers():Promise<User[]>{
+        try{
+            const users=await prisma.user.findMany();
+            return users;
+        }
+        catch(err){
+            throw new DBException("Error retrieving all users", err as Error);
+        }
+    }
 
 
 }
